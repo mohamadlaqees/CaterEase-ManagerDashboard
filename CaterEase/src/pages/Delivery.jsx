@@ -198,11 +198,11 @@ const Delivery = () => {
                       onValueChange={setSelectValue}
                     >
                       <SelectTrigger className="basis-1/2 min-w-[225px] w-full h-10!  focus-visible:ring-(--primary) focus:border-0 border-(--border-color) border-2  placeholder-(--secondaryFont) text-(--secondaryFont)">
-                        <SelectValue placeholder="Status" />
+                        <SelectValue placeholder="Availability" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup className="text-(--primaryFont)">
-                          <SelectItem value="all">All Statuses</SelectItem>
+                          <SelectItem value="all">All</SelectItem>
                           <SelectItem value="available">Active</SelectItem>
                           <SelectItem value="unavailable">
                             Not Active

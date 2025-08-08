@@ -425,7 +425,9 @@ const Dashboard = () => {
                 <CircleAlert />
               </span>
               <div>
-                <h1 className="text-(--secondaryFont)">Total Order Canceled</h1>
+                <h1 className="text-(--secondaryFont)">
+                  Total Order Cancelled
+                </h1>
                 {ordersStatusResponse?.order_cancelled}
               </div>
             </div>

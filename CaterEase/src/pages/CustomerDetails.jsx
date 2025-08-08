@@ -43,7 +43,7 @@ const tableHeader = [
         className={`flex items-center justify-center py-2 px-3 rounded-md ${
           row.status === "delivered"
             ? "text-[#22c55e] bg-[#e8f9ef]"
-            : row.status === "Canceled"
+            : row.status === "cancelled"
             ? "text-[#ef4444] bg-[#fdecec]"
             : row.status === "confirmed" || row.status === "pending"
             ? "text-[#eab308] bg-[#fdf7e6]"
@@ -251,7 +251,7 @@ const CustomerDetails = () => {
                       <SelectItem value="confirmed">Confirmed</SelectItem>
                       <SelectItem value="preparing">Preparing</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="canceled">Canceled</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>

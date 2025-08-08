@@ -24,58 +24,46 @@ const FoodDetails = () => {
   const { data: packageResponse, isLoading } = useGetPackageQuery(food);
   const { data: branchServicesResponse } = useBranchServicesQuery();
 
-  const packageData = packageResponse?.package;
-
   const calculateDiscountedPrice = (basePrice, discounts) => {
     if (!basePrice || !discounts || discounts.length === 0) {
       return { newPrice: basePrice || 0, discountValue: 0 };
     }
     const discount = discounts[0];
-    const discountValue = parseFloat(discount.value);
+    const discountValue = parseFloat(discount.amount);
     const newPrice = basePrice * (1 - discountValue / 100);
+
     return { newPrice, discountValue };
   };
 
   const { newPrice, discountValue } = calculateDiscountedPrice(
-    packageData?.base_price,
-    packageData?.discounts
+    packageResponse?.base_price,
+    packageResponse?.discounts
   );
 
-  const services = React.useMemo(() => {
-    if (!packageData || !branchServicesResponse?.service_types) {
-      return [];
-    }
-
-    const packageServiceIds = new Set(
-      packageData.extra_services?.map((s) => s.pivot.branch_service_type_id) ||
-        []
-    );
-
-    return branchServicesResponse.service_types
-      .filter((service) => packageServiceIds.has(service.service_type.id))
-      .map((service) => service.service_type.name);
-  }, [packageData, branchServicesResponse]);
+  const services = packageResponse?.branch_service_types.map(
+    (service) => service.service_type_name
+  );
 
   const packageDetails = {
-    name: packageData?.name || "",
-    photo: packageData?.photo,
-    description: packageData?.description || "",
-    basePrice: packageData?.base_price,
+    name: packageResponse?.name || "",
+    photo: packageResponse?.photo,
+    description: packageResponse?.description || "",
+    basePrice: packageResponse?.base_price,
     discountedPrice: newPrice,
     discountPercentage: discountValue,
-    items: packageData?.items || [],
-    extras: packageData?.extras || [],
-    categories: packageData?.categories || [],
-    occasions: packageData?.occasion_types || [],
-    serves: packageData?.serves_count || 0,
-    maxExtraPersons: packageData?.max_extra_persons || 0,
-    pricePerExtra: packageData?.price_per_extra_person,
-    cancellationPolicy: packageData?.cancellation_policy || "N/A",
-    notes: packageData?.notes,
-    isActive: packageData?.is_active || false,
+    items: packageResponse?.items || [],
+    extras: packageResponse?.extras || [],
+    categories: packageResponse?.categories || [],
+    occasions: packageResponse?.occasion_types || [],
+    serves: packageResponse?.serves_count || 0,
+    maxExtraPersons: packageResponse?.max_extra_persons || 0,
+    pricePerExtra: packageResponse?.price_per_extra_person,
+    cancellationPolicy: packageResponse?.cancellation_policy || "N/A",
+    notes: packageResponse?.notes,
+    isActive: packageResponse?.is_active || false,
     prepayment: {
-      required: packageData?.prepayment_required || false,
-      amount: packageData?.prepayment_amount,
+      required: packageResponse?.prepayment_required || false,
+      amount: packageResponse?.prepayment_amount,
     },
     servicesNames: services,
   };
@@ -101,6 +89,8 @@ const FoodDetails = () => {
     prepayment,
     servicesNames,
   } = packageDetails;
+
+  const categoryNames = categories?.map((ctg) => ctg.name);
 
   if (isLoading) {
     return <FoodDetailsSkeleton />;
@@ -146,7 +136,7 @@ const FoodDetails = () => {
             {discountPercentage > 0 && (
               <div className="absolute top-4 right-4 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full flex items-center">
                 <Percent className="w-4 h-4 mr-1" />
-                {discountPercentage} OFF
+                {discountPercentage.amount} OFF
               </div>
             )}
           </div>
@@ -161,7 +151,7 @@ const FoodDetails = () => {
                 {items.map((item) => (
                   <li key={item.id} className="flex items-center">
                     <span className="text-(--primary) mr-2">&#10003;</span>
-                    {item.food_item.name}
+                    {item.food_item_name}
                   </li>
                 ))}
               </ul>
@@ -247,14 +237,9 @@ const FoodDetails = () => {
                 <Tag className="w-5 h-5 mr-2 text-(--primary)" /> Categories
               </h3>
               <div className="flex flex-wrap gap-3">
-                {categories.map((cat) => (
-                  <span
-                    key={cat.id}
-                    className="rounded-full px-4 py-2 bg-gray-100 border border-(--border-color) text-sm text-(--secondaryFont)"
-                  >
-                    {cat.name}
-                  </span>
-                ))}
+                <span className="rounded-full px-4 py-2 bg-gray-100 border border-(--border-color) text-sm text-(--secondaryFont)">
+                  {categoryNames?.map((ctg) => ctg)}
+                </span>
               </div>
             </div>
             <div>
@@ -263,7 +248,7 @@ const FoodDetails = () => {
                 for
               </h3>
               <div className="flex flex-wrap gap-3">
-                {occasions.map((occasion) => (
+                {occasions?.map((occasion) => (
                   <span
                     key={occasion.id}
                     className="rounded-full px-4 py-2 bg-gray-100 border border-(--border-color) text-sm text-(--secondaryFont)"

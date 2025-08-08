@@ -11,13 +11,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { Link } from "react-router"; // Corrected import for react-router
 
-const TableComponent = ({
-  tableHeader,
-  tableBody,
-  tableClass,
-  isLoading,
-  direction,
-}) => {
+const TableComponent = ({ tableHeader, tableBody, tableClass, isLoading }) => {
   const headerCount = tableHeader.length;
   return (
     <div className="w-full overflow-x-auto">
@@ -47,7 +41,13 @@ const TableComponent = ({
                 {tableHeader.map((header) => (
                   <TableCell key={header.name} className={body.class}>
                     {header.key === "name" ? (
-                      <Link to={direction ? `/${direction}/${body.id}` : ""}>
+                      <Link
+                        to={`${
+                          body.category
+                            ? `${body.category}/${body.id}`
+                            : `${body.id}`
+                        }`}
+                      >
                         {header.render ? header.render(body) : body[header.key]}
                       </Link>
                     ) : header.render ? (

@@ -21,6 +21,8 @@ export const apiSlice = createApi({
     "updatePackage",
     "discount",
     "updateDelivery",
+    "order",
+    "allDelivery",
   ],
   endpoints: (build) => ({
     // Auth
@@ -138,7 +140,7 @@ export const apiSlice = createApi({
       query: (branchID) => `orders/best-sell/${branchID}`,
     }),
     promo: build.query({
-      query: () => `descount/manage/all`,
+      query: () => `package-discounts/management`,
     }),
     addpackage: build.mutation({
       query: (packageInfo) => ({
@@ -306,6 +308,41 @@ export const apiSlice = createApi({
     }),
     order: build.query({
       query: (orderID) => `order/manange/${orderID}/show`,
+      providesTags: ["order"],
+    }),
+    orderDateSearch: build.query({
+      query: (date) => `order/manange/data?date=${date}`,
+    }),
+    acceptOrder: build.mutation({
+      query: (orderID) => ({
+        url: `order/manange/${orderID}/approve`,
+        method: "POST",
+      }),
+      invalidatesTags: ["order"],
+    }),
+    rejectOrder: build.mutation({
+      query: ({ orderID, data }) => ({
+        url: `order/manange/${orderID}/reject`,
+        method: "POST",
+        body: {
+          ...data,
+        },
+      }),
+      invalidatesTags: ["order"],
+    }),
+    allDeliveryEmp: build.query({
+      query: () => "delivery/manage",
+      providesTags: ["allDelivery"],
+    }),
+    assignOrder: build.mutation({
+      query: (data) => ({
+        url: "order/manange/assignDelivery",
+        method: "POST",
+        body: {
+          ...data,
+        },
+      }),
+      invalidatesTags: ["allDelivery"],
     }),
 
     //Report
@@ -382,4 +419,9 @@ export const {
   useDeliveryReviewsDateFilterQuery,
   useOnGoingOrdersQuery,
   useOrderQuery,
+  useOrderDateSearchQuery,
+  useAcceptOrderMutation,
+  useRejectOrderMutation,
+  useAllDeliveryEmpQuery,
+  useAssignOrderMutation,
 } = apiSlice;

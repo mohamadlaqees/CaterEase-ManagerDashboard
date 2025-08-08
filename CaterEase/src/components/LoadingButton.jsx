@@ -10,9 +10,18 @@ const LoadingButton = ({
   loadingText,
   text,
   spinColor = "",
+  click,
+  variant,
 }) => {
   return isButton ? (
-    <Button type={type} className={btnClass} disabled={disabled}>
+    <Button
+      type={type}
+      className={btnClass}
+      disabled={disabled}
+      onClick={click}
+      size="sm"
+      variant={variant}
+    >
       {disabled ? (
         <span className="flex items-center gap-1">
           <Loader2 className={`animate-spin ${spinColor}`} /> {loadingText}

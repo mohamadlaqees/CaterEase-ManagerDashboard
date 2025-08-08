@@ -84,14 +84,14 @@ export const OrdersSkeleton = () => {
 
             {/* Ongoing Orders List Skeleton */}
             {[
-              { title: "Waiting", items: 2 },
-              { title: "Cooking", items: 1 },
-              { title: "Delivered", items: 2 },
+              { title: "Waiting" },
+              { title: "Cooking" },
+              { title: "Delivered" },
             ].map((section, i) => (
               <div key={i} className="mt-4">
                 <Skeleton className="h-6 w-24 my-4" />
                 <div className="p-3 border-2 border-gray-200 rounded-md space-y-4">
-                  {[...Array(section.items)].map((_, j) => (
+                  {[...Array(1)].map((_, j) => (
                     <div
                       key={j}
                       className="p-3 rounded-md flex items-center gap-5"

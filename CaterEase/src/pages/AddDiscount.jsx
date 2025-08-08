@@ -178,7 +178,7 @@ const DiscountFormModal = ({
                 </FormItem>
               )}
             />
-            <div className="flex flex-col md:flex-row gap-8">
+            <div className="flex flex-col lg:flex-row gap-8">
               <FormField
                 control={form.control}
                 name="startDate"
@@ -221,7 +221,7 @@ const DiscountFormModal = ({
                 control={form.control}
                 name="endDate"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col w-full">
+                  <FormItem className="flex flex-col w-full ">
                     <FormLabel className="text-(--primaryFont)">
                       End Date
                     </FormLabel>
@@ -231,7 +231,7 @@ const DiscountFormModal = ({
                           <Button
                             variant={"outline"}
                             disabled={mode === "view"} // <-- Disable button in view mode
-                            className="focus-visible:ring-(--primary) focus:border-0 border-(--border-color) border-2 h-10 placeholder-(--secondaryFont) text-(--secondaryFont)"
+                            className="focus-visible:ring-(--primary)  focus:border-0 border-(--border-color) border-2 h-10 placeholder-(--secondaryFont) text-(--secondaryFont)"
                           >
                             {field.value ? (
                               format(field.value, "PPP")
@@ -242,7 +242,7 @@ const DiscountFormModal = ({
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 " align="start">
                         <Calendar
                           mode="single"
                           selected={field.value}

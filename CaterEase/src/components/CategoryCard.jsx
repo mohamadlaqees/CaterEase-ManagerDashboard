@@ -9,7 +9,7 @@ const CategoryCard = ({ item, showHandler, editHandler, deleteHandler }) => {
         <p className="font-semibold text-sm sm:text-base ">{item.name}</p>
 
         <div className="flex items-center gap-3 ">
-          <div>{renderStars(1)}</div>
+          <div>{renderStars(item.rating)}</div>
           <span className="text-(--secondaryFont) font-bold text-xs sm:text-sm">
             {item.rating} <span className="text-xl">.</span> {item.reviews}{" "}
             reviews

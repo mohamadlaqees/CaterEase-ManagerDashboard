@@ -63,7 +63,7 @@ const routes = createBrowserRouter([
         element: <FoodDetails />,
       },
       {
-        path: "orders/:id/:food",
+        path: "orders/:orderID/:category/:food",
         element: <FoodDetails />,
       },
       {

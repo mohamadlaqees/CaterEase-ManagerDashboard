@@ -1,14 +1,22 @@
 import { Check, ChevronRight, Dot } from "lucide-react";
 import { NavLink, useParams } from "react-router";
 import TableComponent from "../components/TableComponent";
-import renderStars from "../util/renderStars";
 import { Button } from "@/components/ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { openAssignOrder, openDelivery } from "../store/orderSlice";
 import { useEffect, useState } from "react";
 import AssignOrder from "./AssignOrder";
-import { useOrderQuery } from "../store/apiSlice/apiSlice";
+import {
+  useAcceptOrderMutation,
+  useOrderQuery,
+  useRejectOrderMutation,
+} from "../store/apiSlice/apiSlice";
 import { OrderDetailsSkeleton } from "../components/skeleton/OrderDetailsSkeleton";
+import { format } from "date-fns";
+import { toast, Toaster } from "sonner";
+import LoadingButton from "../components/LoadingButton";
+import { openConfirmPopUp } from "../store/menuSlice";
+import ConfirmPopUp from "../components/ConfirmPopUp";
 
 const steps = [
   { id: 1, label: "Order received" },
@@ -18,14 +26,13 @@ const steps = [
 ];
 const tableHeader = [
   {
-    name: "Dish",
+    name: "Package",
     key: "name",
     render: (row) => (
       <div className="flex items-center gap-3 pr-10">
         <img src={row.img} alt={row.name} className="w-12 h-12 rounded-full" />
         <div>
           <div>{row.name}</div>
-          <div>{renderStars(row.rate)}</div>
         </div>
       </div>
     ),
@@ -50,62 +57,77 @@ const tableHeader = [
   },
 ];
 
-const tableBody = [
-  {
-    name: "Italian Pizza",
-    price: "$359.69",
-    img: "/pizza.png",
-    rate: 5,
-    quantity: 1,
-  },
-  {
-    name: "Veg Burger",
-    price: "$350.30",
-    img: "/burger.png",
-    rate: 5,
-    quantity: 2,
-  },
-  {
-    name: "Italian Pizza",
-    price: "$359.69",
-    img: "/pizza.png",
-    rate: 5,
-    quantity: 3,
-  },
-  {
-    name: "Italian Pizza",
-    price: "$359.69",
-    img: "/pizza.png",
-    rate: 5,
-    quantity: 1,
-  },
-  {
-    name: "Italian Pizza",
-    price: "$359.69",
-    img: "/pizza.png",
-    rate: 5,
-    quantity: 2,
-  },
-  {
-    name: "Italian Pizza",
-    price: "$359.69",
-    img: "/pizza.png",
-    rate: 5,
-    quantity: 4,
-  },
-];
-
 const OrderDetails = () => {
   const { orderID } = useParams();
-  const { deliveryOpened, deliveryDetails } = useSelector(
-    (state) => state.order
-  );
+  const { confirmPopUpOpened } = useSelector((state) => state.menu);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const dispatch = useDispatch();
   const { data: orderResponse, isLoading } = useOrderQuery(orderID);
+  const [acceptOrder, { isLoading: acceptOrderIsLoading }] =
+    useAcceptOrderMutation();
+  const [rejectOrder, { isLoading: rejectOrderIsLoading }] =
+    useRejectOrderMutation();
 
-  const orderInfo = orderResponse?.map((info) => {});
+  const orderid = orderResponse?.order.id;
+  const customerInfo = {
+    name: orderResponse?.order.customer.name,
+    phone: orderResponse?.order.customer.phone,
+    email: orderResponse?.order.customer.email,
+    gender: orderResponse?.order.customer.gender,
+    address: orderResponse?.order.customer.address,
+    delivery_time: orderResponse?.order.customer.delivery_time,
+    notes: orderResponse?.order.customer.notes_order,
+    date: orderResponse?.order.customer.created_at,
+    is_approved: orderResponse?.order.customer.is_approved,
+    approved_at: orderResponse?.order.customer.approved_at,
+  };
+
+  const payment = {
+    totalPrice: orderResponse?.order?.payment.totalPriceWithDelivery,
+    deliveryPrice: orderResponse?.order?.payment.deliveryPrice,
+    orderPrice: orderResponse?.order?.payment.orderPrice,
+  };
+  const addressInfo = {
+    city: customerInfo.address?.city,
+    street: customerInfo.address?.street,
+    building: customerInfo.address?.building,
+    floor: customerInfo.address?.floor,
+    apartment: customerInfo.address?.apartment,
+  };
+
+  const delieveryInfo = {
+    deliveryID: orderResponse?.order.delivery_info?.delivery_person_id || null,
+  };
+  const packages = orderResponse?.order?.details;
+  const {
+    name,
+    phone,
+    email,
+    gender,
+    delivery_time,
+    date,
+    is_approved,
+    approved_at,
+  } = customerInfo;
+  const { city, street, building, floor, apartment } = addressInfo;
+  const { deliveryID } = delieveryInfo;
+
+  const tableBody = packages?.map((pkg) => {
+    return {
+      id: pkg.package_id,
+      category: pkg.categories[0].name,
+      name: pkg.package_name,
+      price: pkg.unit_price,
+      img: pkg.package_photo,
+      quantity: pkg.quantity,
+    };
+  });
+  const { totalPrice, deliveryPrice, orderPrice } = payment;
+
+  const formattedDate = customerInfo.date
+    ? format(new Date(customerInfo.date), "MMMM d, yyyy")
+    : "Date not available";
 
   useEffect(() => {
     const changeScreen = () => {
@@ -116,9 +138,73 @@ const OrderDetails = () => {
     return () => window.removeEventListener("resize", changeScreen);
   }, []);
 
+  const accepthandler = async () => {
+    try {
+      const response = await acceptOrder(orderID).unwrap();
+      toast.success(response.message, {
+        style: {
+          background: "white",
+          color: "#A1CA46",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      toast.success(error?.data?.message, {
+        style: {
+          background: "white",
+          color: "#ef4444",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
+    }
+  };
+
+  const openPopUpHandler = () => {
+    dispatch(openConfirmPopUp(true));
+  };
+
+  const cancelPopUpHandler = () => {
+    dispatch(openConfirmPopUp(false));
+  };
+
+  const rejectOrderHandler = async (data) => {
+    console.log(orderID);
+    try {
+      const response = await rejectOrder({ orderID, data }).unwrap();
+      toast.success(response.message, {
+        style: {
+          background: "white",
+          color: "#A1CA46",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
+      dispatch(openConfirmPopUp(false));
+    } catch (error) {
+      console.log(error);
+      toast.success(error?.data?.message, {
+        style: {
+          background: "white",
+          color: "#ef4444",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
+    }
+  };
+
   return (
     <div className="relative">
-      <AssignOrder />
+      {confirmPopUpOpened && (
+        <ConfirmPopUp
+          reason={true}
+          loading={rejectOrderIsLoading}
+          onConfirm={rejectOrderHandler}
+          onCancel={cancelPopUpHandler}
+          content={"Are You Sure You Want To reject This Order ?"}
+        />
+      )}
+      <Toaster position="top-center" richColors />
+      <AssignOrder orderID={+orderID} />
       <main className=" text-(--primaryFont) py-10 px-3 sm:p-10 ">
         <header className="flex justify-between items-center  font-bold mb-5">
           <span className="text-sm sm:text-2xl ">Order Details</span>
@@ -142,11 +228,11 @@ const OrderDetails = () => {
         ) : (
           <section className=" border-2 border-(border-color)  rounded-md">
             <header className="text-sm text-center sm:text-base flex items-center sm:justify-start gap-5 p-5 border-b-2 border-(--border-color)">
-              <h2>Order #9F36CA</h2>
+              <h2>Order {orderid}</h2>
               <Dot />
-              <p>September 23, 2023</p>
+              <p>{formattedDate}</p>
               <Dot />
-              <p> 3 Products</p>
+              <p> {packages?.length} packages</p>
             </header>
 
             <div className="text-sm sm:text-base flex justify-center flex-col  2xl:flex-row  px-5 xl:pl-5">
@@ -157,16 +243,18 @@ const OrderDetails = () => {
                       User Info
                     </h1>
                     <div className="p-4 space-y-2">
-                      <h3>Jaylon Calzoni</h3>
+                      <h3>{name}</h3>
                       <p className="text-(--secondaryFont)">
-                        2123 Parker st. Allentown, New Mexico 123456
+                        {city} , {street} , {building} , {floor} , {apartment}
                       </p>
                       <h3>Email</h3>
-                      <p className="text-(--secondaryFont)">
-                        jaylon.calzoni@mail.com
-                      </p>
+                      <p className="text-(--secondaryFont)">{email}</p>
                       <h3>Phone</h3>
-                      <p className="text-(--secondaryFont)">(123) 456-7890</p>
+                      <p className="text-(--secondaryFont)">{phone}</p>
+                      <h3>Gender</h3>
+                      <p className="text-(--secondaryFont)">
+                        {gender === "f" ? "Female" : "Male"}
+                      </p>
                     </div>
                   </div>
                   <div className=" w-full  border-2 border-(border-color)  rounded-md">
@@ -174,14 +262,16 @@ const OrderDetails = () => {
                       Shipping Address
                     </h1>
                     <div className="p-4 space-y-2">
-                      <h3>Ryan Westervelt i</h3>
+                      <h3>{city}</h3>
                       <p className="text-(--secondaryFont)">
-                        2123 Parker st. Allentown, New Mexico 123456
+                        {street} , {building} , {floor} , {apartment}
                       </p>
                       <h3>Date</h3>
                       <p className="text-(--secondaryFont)">2025 / 9 / 15</p>
                       <h3>Time</h3>
-                      <p className="text-(--secondaryFont)">10:30 AM</p>
+                      <p className="text-(--secondaryFont)">
+                        {delivery_time || " -"}
+                      </p>
                     </div>
                   </div>
                   <div className=" w-full  border-2 border-(border-color)  rounded-md">
@@ -191,19 +281,17 @@ const OrderDetails = () => {
                     <div className="space-y-2">
                       <div className="p-3 flex justify-between border-b-2 border-(--border-color)">
                         <h3>Subtotal :</h3>
-                        <p className="text-(--secondaryFont)">$365.00</p>
-                      </div>
-                      <div className="p-3 flex justify-between border-b-2 border-(--border-color)">
-                        <h3>Discount :</h3>
-                        <p className="text-(--secondaryFont)">20%</p>
+                        <p className="text-(--secondaryFont)">{orderPrice}</p>
                       </div>
                       <div className="p-3 flex justify-between border-b-2 border-(--border-color)">
                         <h3>Shipping :</h3>
-                        <p className="text-(--secondaryFont)">Not Count</p>
+                        <p className="text-(--secondaryFont)">
+                          {deliveryPrice || "-"}
+                        </p>
                       </div>
                       <div className="p-3 flex justify-between ">
                         <h3>Total :</h3>
-                        <p className="text-(--secondaryFont)">$84.00</p>
+                        <p className="text-(--secondaryFont)">{totalPrice}</p>
                       </div>
                     </div>
                   </div>
@@ -273,47 +361,14 @@ const OrderDetails = () => {
               <div className="2xl:h-lvh  flex flex-col gap-10  2xl:justify-between mx-5 mb-10">
                 <div
                   className={`transition-all ${
-                    deliveryOpened
+                    is_approved === 1
                       ? "opacity-100 translate-y-0 pointer-events-auto"
-                      : "opacity-0 h-0 -translate-y-2 pointer-events-none"
-                  } 2xl:w-[280px] w-full mt-10  border-2 border-(border-color)  rounded-md`}
+                      : "opacity-0 translate-y-full pointer-events-none"
+                  } 
+                   2xl:w-[280px] w-full mt-10  border-2 border-(border-color)  rounded-md`}
                 >
-                  <h1 className="p-4 border-b-2 border-(--border-color)">
-                    Delivery Details
-                  </h1>
-                  <img src="/van.png" alt="" className="w-30 h-20 mx-auto" />
-                  {deliveryDetails ? (
-                    <div className="space-y-2">
-                      <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
-                        <h3 className="">Delivery employee :</h3>
-                        <p className="text-(--secondaryFont)">Jaylon Calzoni</p>
-                      </div>
-                      <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
-                        <h3 className="">Phone :</h3>
-                        <p className="text-(--secondaryFont)">(123) 456-7890</p>
-                      </div>
-                      <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
-                        <h3 className="">Payment Mode :</h3>
-                        <p className="text-(--secondaryFont)">Upon delivery</p>
-                      </div>
-                      <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
-                        <h3 className="">Distance :</h3>
-                        <p className="text-(--secondaryFont)">15 KM</p>
-                      </div>
-                      <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color) ">
-                        <h3 className="">Estimation time :</h3>
-                        <p className="text-(--secondaryFont)">30 min</p>
-                      </div>
-                      <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color) ">
-                        <h3 className="">Date :</h3>
-                        <p className="text-(--secondaryFont)">2025 / 9 / 15</p>
-                      </div>
-                      <div className="font-normal text-sm p-3 flex justify-between ">
-                        <h3 className="">Starting Time :</h3>
-                        <p className="text-(--secondaryFont)">10:00 AM</p>
-                      </div>
-                    </div>
-                  ) : (
+                  <>
+                    <img src="/van.png" alt="" className="w-30 h-20 mx-auto" />
                     <div className="mx-4 my-5">
                       <Button
                         type="submit"
@@ -326,30 +381,92 @@ const OrderDetails = () => {
                         Manage Delivery{" "}
                       </Button>
                     </div>
-                  )}
+                  </>
                 </div>
-                {!deliveryDetails && (
-                  <div className="flex  flex-col text-sm  smtext-base  items-center sm:flex-row  sm:justify-end gap-10 ">
+                {is_approved === 1 && deliveryID && (
+                  <div
+                    className={`transition-all opacity-100 translate-y-0 pointer-events-auto 2xl:w-[280px] w-full mt-10  border-2 border-(border-color)  rounded-md`}
+                  >
+                    <>
+                      <h1 className="p-4 border-b-2 border-(--border-color)">
+                        Delivery Details
+                      </h1>
+                      <img
+                        src="/van.png"
+                        alt=""
+                        className="w-30 h-20 mx-auto"
+                      />
+                      <div className="space-y-2">
+                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
+                          <h3 className="">Delivery employee :</h3>
+                          <p className="text-(--secondaryFont)">
+                            Jaylon Calzoni
+                          </p>
+                        </div>
+                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
+                          <h3 className="">Phone :</h3>
+                          <p className="text-(--secondaryFont)">
+                            (123) 456-7890
+                          </p>
+                        </div>
+                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
+                          <h3 className="">Payment Mode :</h3>
+                          <p className="text-(--secondaryFont)">
+                            Upon delivery
+                          </p>
+                        </div>
+                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
+                          <h3 className="">Distance :</h3>
+                          <p className="text-(--secondaryFont)">15 KM</p>
+                        </div>
+                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color) ">
+                          <h3 className="">Estimation time :</h3>
+                          <p className="text-(--secondaryFont)">30 min</p>
+                        </div>
+                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color) ">
+                          <h3 className="">Date :</h3>
+                          <p className="text-(--secondaryFont)">
+                            2025 / 9 / 15
+                          </p>
+                        </div>
+                        <div className="font-normal text-sm p-3 flex justify-between ">
+                          <h3 className="">Starting Time :</h3>
+                          <p className="text-(--secondaryFont)">10:00 AM</p>
+                        </div>
+                      </div>
+                    </>
+                  </div>
+                )}
+                <div className="flex  flex-col text-sm  sm:text-base  items-center sm:flex-row  sm:justify-end gap-10 ">
+                  {is_approved === 1 && deliveryID === null && (
                     <Button
+                      onClick={openPopUpHandler}
                       type="button"
                       variant="secondary"
-                      className="w-full sm:w-30 bg-[#fdecec] hover:bg-[#ef4444] hover:text-white text-[#ef4444] h-10 text-base cursor-pointer"
+                      className={`w-full ${
+                        is_approved ? "w-full" : "sm:w-30"
+                      }  bg-[#fdecec] hover:bg-[#ef4444] hover:text-white text-[#ef4444] h-10 text-base cursor-pointer`}
                     >
                       Reject
                     </Button>
-                    <Button
+                  )}
+                  {is_approved === 0 && (
+                    <LoadingButton
+                      isButton={true}
+                      btnClass={`w-full cursor-pointer  h-10 text-base `}
+                      spinColor=""
                       type="submit"
-                      disabled={deliveryOpened}
-                      className={`w-full cursor-pointer sm:w-30 h-10 text-base `}
-                      onClick={() => {
-                        dispatch(openDelivery(true));
-                        setCurrentStep(2);
+                      loadingText="Accepting..."
+                      text="Accept Order"
+                      disabled={acceptOrderIsLoading}
+                      click={() => {
+                        dispatch(openDelivery(true)),
+                          setCurrentStep(2),
+                          accepthandler();
                       }}
-                    >
-                      Accept Order
-                    </Button>
-                  </div>
-                )}
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </section>

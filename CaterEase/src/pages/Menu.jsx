@@ -30,7 +30,6 @@ const Menu = () => {
   const { data: bestSellerResponse, isLoading: bestSellerIsLoading } =
     useBestSellerQuery(localStorage.getItem("branchID"));
   const { data: promoResponse, isLoading: promoIsLoading } = usePromoQuery();
-  console.log(promoResponse);
   const navigate = useNavigate();
   const buttonHandler = () => {
     navigate("add-food");
@@ -84,16 +83,16 @@ const Menu = () => {
       };
     }
   );
-  const transformedPromo = promoResponse?.map((packages) => {
+  const transformedPromo = promoResponse?.packages.map((pkg) => {
     return {
-      id: packages.id,
-      discount: packages.discount_value,
-      name: packages.name,
-      price: packages.old_price,
-      rating: packages.average_rating,
-      reviews: `${packages.reviews_count} 1k user reviews`,
-      image: packages.photo,
-      category: packages.category_ids?.[0],
+      id: pkg.id,
+      discount: pkg.discounts,
+      name: pkg.name,
+      price: pkg.base_price,
+      rating: 0,
+      reviews: `0 reviews`,
+      image: pkg.photo,
+      category: pkg.categories[0].id,
     };
   });
 
@@ -337,7 +336,7 @@ const Menu = () => {
                         className="rounded-md border-2 border-(--border-color) hover:shadow-md cursor-pointer transition hover:-translate-y-1 hover:border-0 py-5 px-3 sm:px-5"
                       >
                         <span className="bg-[#e75858] text-sm p-2 text-white rounded-r-md relative right-5">
-                          {Ditem.discount}
+                          {Ditem.discount[0].value}
                         </span>
                         <div className="flex items-center justify-between mt-2">
                           <div className="space-y-2">
@@ -348,7 +347,7 @@ const Menu = () => {
                               {Ditem.price}
                             </span>
                             <div className="flex items-center gap-3">
-                              <div>{renderStars(1)}</div>
+                              <div>{renderStars(Ditem.rating)}</div>
                               <span className="text-(--secondaryFont) font-bold text-xs sm:text-sm">
                                 {Ditem.rating}
                                 <span className="text-xl">.</span>

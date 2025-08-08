@@ -20,11 +20,14 @@ import {
 } from "@/components/ui/popover";
 import {
   useOnGoingOrdersQuery,
+  useOrderDateSearchQuery,
   useOrderHistoryQuery,
   useOrderStatisticsQuery,
   useOrderStatusSearchQuery,
 } from "../store/apiSlice/apiSlice";
 import { OrdersSkeleton } from "../components/skeleton/OrdersSkeleton";
+import { useNavigate } from "react-router";
+import OnGoingOrderSkeleton from "../components/skeleton/OnGoingOrderSkeleton";
 
 const tableHeader = [
   {
@@ -40,7 +43,11 @@ const tableHeader = [
     key: "name",
     render: (row) => (
       <div className="flex items-center gap-3">
-        <img src={row.img} alt={row.name} className="w-12 h-12 rounded-full" />
+        <img
+          src={"/order.png"}
+          alt={row.name}
+          className="w-12 h-12 rounded-full"
+        />
         <div>
           <div>{row.name}</div>
         </div>
@@ -56,7 +63,7 @@ const tableHeader = [
         className={`flex items-center justify-center py-2 px-3 rounded-md ${
           row.status === "delivered"
             ? "text-[#22c55e] bg-[#e8f9ef]"
-            : row.status === "Canceled"
+            : row.status === "cancelled"
             ? "text-[#ef4444] bg-[#fdecec]"
             : row.status === "confirmed" || row.status === "pending"
             ? "text-[#eab308] bg-[#fdf7e6]"
@@ -72,6 +79,7 @@ const tableHeader = [
 ];
 
 const Orders = () => {
+  const navigate = useNavigate();
   const [status, setStatus] = useState("");
   const [date, setDate] = useState();
   const { data: orderHistory, isLoading } = useOrderHistoryQuery();
@@ -83,14 +91,17 @@ const Orders = () => {
   });
   const { data: orderStatisticsResponse, isLoading: OrderStatisticsIsLoading } =
     useOrderStatisticsQuery();
-  const { data: onGoingOrdersResponse, isLoading: onGoingOrdersIsLoading } =
-    useOnGoingOrdersQuery();
+  const { data: onGoingOrdersResponse } = useOnGoingOrdersQuery();
+  const {
+    data: orderDateSearchResponse,
+    isFetching: orderDateSearchIsLoading,
+  } = useOrderDateSearchQuery(date ? format(date, "yyyy-MM-dd") : "");
 
   const tableBody = orderHistory?.orders.map((order) => {
     return {
       date: format(order.created_at, "yyyy-MM-dd"),
       id: order.id,
-      name: order.order_details[0].package.name,
+      name: `order ${order.id}`,
       price: order.total_price,
       img: order.order_details[0].photo,
       status: order.status,
@@ -116,6 +127,34 @@ const Orders = () => {
   const pending = onGoingOrdersResponse?.pending || [];
   const preparing = onGoingOrdersResponse?.preparing || [];
   const delivered = onGoingOrdersResponse?.delivered || [];
+
+  const transformedPending = orderDateSearchResponse?.data.pending || [];
+  const transformedPreparing = orderDateSearchResponse?.data.preparing || [];
+  const transformedDelivered = orderDateSearchResponse?.data.delivered || [];
+
+  const pendingOrderMap = date ? transformedPending : pending;
+  const preparingOrderMap = date ? transformedPreparing : preparing;
+  const deliveredOrderMap = date ? transformedDelivered : delivered;
+
+  const preparingOrdersInfo = preparingOrderMap?.map((order) => {
+    return {
+      id: order.id,
+      date: format(order?.created_at, "yyyy-MM-dd hh:mm a"),
+    };
+  });
+  const pendingOrdersInfo = pendingOrderMap?.map((order) => {
+    return {
+      id: order.id,
+      date: format(order?.created_at, "yyyy-MM-dd hh:mm a"),
+    };
+  });
+  const deliveredOrdersInfo = deliveredOrderMap?.map((order) => {
+    return {
+      id: order.id,
+      date: format(order?.created_at, "yyyy-MM-dd hh:mm a"),
+    };
+  });
+
   return (
     <main className=" text-(--primaryFont) p-5 sm:p-10">
       <header className="flex justify-between   font-bold mb-5">
@@ -164,7 +203,7 @@ const Orders = () => {
                     <SelectGroup>
                       <SelectItem value="all">All</SelectItem>
                       <SelectItem value="delivered">Delivered</SelectItem>
-                      <SelectItem value="canceled">Canceled</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
                       <SelectItem value="confirmed">Confirmed</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="preparing">Preparing</SelectItem>
@@ -175,7 +214,6 @@ const Orders = () => {
               <div className=" w-full  mt-10 text-(--primaryFont)  border-2 border-(--border-color) py-5 px-8 rounded-md">
                 <div className="overflow-hidden max-h-[400px]  hover:overflow-y-scroll custom-scrollbar    transition-all  ">
                   <TableComponent
-                    direction={"orders"}
                     tableBody={
                       status === "all" || status === ""
                         ? tableBody
@@ -230,119 +268,137 @@ const Orders = () => {
                 </Popover>
               </div>
 
-              <div>
-                <header className="my-4 font-bold">Pending</header>
-                <div
-                  className={`p-3 border-2 border-(--border-color) rounded-md space-y-4 overflow-hidden overflow-x-auto  ${
-                    pending.length > 0 ? "hover:overflow-y-scroll" : ""
-                  } custom-scrollbar max-h-53`}
-                >
-                  {pending.length == 0 ? (
-                    <div className="flex flex-col items-center justify-center text-center text-gray-400 py-4">
-                      <XCircle className="w-8 h-8 mb-2" />
-                      <p className="font-medium">No packages</p>
-                    </div>
-                  ) : (
-                    pending?.map((order) => (
-                      <div className="min-w-sm 2xl:min-w-fit hover:opacity-90 transition-all cursor-pointer bg-(--secondary) p-3 rounded-md flex items-center gap-5">
-                        <img
-                          src="/pizza.png"
-                          className="rounded-full w-20 h-15"
-                          alt=""
-                        />
-                        <div className="w-full flex justify-between">
-                          <div className="flex  gap-3">
-                            <div>
-                              <h3>spaghetti</h3>
-                              <span className="text-sm">#C0E4F7</span>
-                            </div>
-                            <Eye className="text-(--secondaryFont)" size={20} />
-                          </div>
-                          <div className="text-(--secondaryFont) text-sm">
-                            6:25 AM
-                          </div>
+              {orderDateSearchIsLoading ? (
+                <OnGoingOrderSkeleton />
+              ) : (
+                <>
+                  <div>
+                    <header className="my-4 font-bold">Pending</header>
+                    <div
+                      className={`p-3 border-2 border-(--border-color) rounded-md space-y-4 overflow-hidden overflow-x-auto  ${
+                        pending.length > 0 ? "hover:overflow-y-scroll" : ""
+                      } custom-scrollbar max-h-53`}
+                    >
+                      {pendingOrdersInfo.length == 0 ? (
+                        <div className="flex flex-col items-center justify-center text-center text-gray-400 py-4">
+                          <XCircle className="w-8 h-8 mb-2" />
+                          <p className="font-medium">No packages</p>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+                      ) : (
+                        pendingOrdersInfo?.map((order) => (
+                          <div className="min-w-sm 2xl:min-w-fit hover:opacity-90 transition-all  bg-(--secondary) p-3 rounded-md flex items-center gap-5">
+                            <img
+                              src="/order.png"
+                              className="rounded-full w-20 h-15"
+                              alt=""
+                            />
+                            <div className="w-full flex justify-between">
+                              <div>
+                                <div className="flex items-center gap-3">
+                                  <h3>Preparing order</h3>
+                                  <Eye
+                                    className="text-(--secondaryFont) mx-2 sm:mx-0 hover:brightness-50 cursor-pointer"
+                                    size={20}
+                                    onClick={() => navigate(`${order.id}`)}
+                                  />
+                                </div>
+                                <span className="text-sm">{order.id}</span>
+                              </div>
+                              <div className="text-(--secondaryFont) text-sm">
+                                {order.date}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
 
-              <div>
-                <header className="my-4 font-bold">Preparing</header>
-                <div
-                  className={`p-3 border-2 border-(--border-color) rounded-md space-y-4 overflow-hidden overflow-x-auto  ${
-                    preparing.length > 0 ? "hover:overflow-y-scroll" : ""
-                  } custom-scrollbar max-h-53`}
-                >
-                  {preparing.length == 0 ? (
-                    <div className="flex flex-col items-center justify-center text-center text-gray-400 py-4">
-                      <XCircle className="w-8 h-8 mb-2" />
-                      <p className="font-medium">No packages</p>
-                    </div>
-                  ) : (
-                    preparing?.map((order) => (
-                      <div className="min-w-sm 2xl:min-w-fit hover:opacity-90 transition-all cursor-pointer bg-(--secondary) p-3 rounded-md flex items-center gap-5">
-                        <img
-                          src="/cookies.png"
-                          className="rounded-full w-20 h-15"
-                          alt=""
-                        />
-                        <div className="w-full flex justify-between">
-                          <div className="flex  gap-3">
-                            <div>
-                              <h3>Butter Cookies</h3>
-                              <span className="text-sm">#C0E4F7</span>
-                            </div>
-                            <Eye className="text-(--secondaryFont)" size={20} />
-                          </div>
-                          <div className="text-(--secondaryFont) text-sm">
-                            6:25 AM
-                          </div>
+                  <div>
+                    <header className="my-4 font-bold">Preparing</header>
+                    <div
+                      className={`p-3 border-2 border-(--border-color) rounded-md space-y-4 overflow-hidden overflow-x-auto  ${
+                        preparing.length > 0 ? "hover:overflow-y-scroll" : ""
+                      } custom-scrollbar max-h-53`}
+                    >
+                      {preparingOrdersInfo.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center text-center text-gray-400 py-4">
+                          <XCircle className="w-8 h-8 mb-2" />
+                          <p className="font-medium">No packages</p>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+                      ) : (
+                        preparingOrdersInfo?.map((order) => (
+                          <div className="min-w-sm 2xl:min-w-fit hover:opacity-90 transition-all  bg-(--secondary) p-3 rounded-md flex items-center gap-5">
+                            <img
+                              src="/order.png"
+                              className="rounded-full w-20 h-15"
+                              alt=""
+                            />
+                            <div className="w-full flex justify-between">
+                              <div>
+                                <div className="flex items-center gap-3">
+                                  <h3>Preparing order</h3>
+                                  <Eye
+                                    className="text-(--secondaryFont) mx-2 sm:mx-0 hover:brightness-50 cursor-pointer"
+                                    size={20}
+                                    onClick={() => navigate(`${order.id}`)}
+                                  />
+                                </div>
+                                <span className="text-sm">{order.id}</span>
+                              </div>
+                              <div className="text-(--secondaryFont) text-sm">
+                                {order.date}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
 
-              <div>
-                <header className="my-4 font-bold">Delieverd</header>
-                <div
-                  className={`p-3 border-2 border-(--border-color) rounded-md space-y-4 overflow-hidden overflow-x-auto  ${
-                    delivered.length > 0 ? "hover:overflow-y-scroll" : ""
-                  } custom-scrollbar max-h-53`}
-                >
-                  {delivered.length == 0 ? (
-                    <div className="flex flex-col items-center justify-center text-center text-gray-400 py-4">
-                      <XCircle className="w-8 h-8 mb-2" />
-                      <p className="font-medium">No packages</p>
-                    </div>
-                  ) : (
-                    delivered?.map((order) => (
-                      <div className="min-w-sm 2xl:min-w-fit hover:opacity-90 transition-all cursor-pointer bg-(--secondary) p-3 rounded-md flex items-center gap-5">
-                        <img
-                          src="/burger.png"
-                          className="rounded-full w-20 h-15"
-                          alt=""
-                        />
-                        <div className="w-full flex justify-between">
-                          <div className="flex  gap-3">
-                            <div>
-                              <h3>Vega Burger</h3>
-                              <span className="text-sm">#C0E4F7</span>
-                            </div>
-                            <Eye className="text-(--secondaryFont)" size={20} />
-                          </div>
-                          <div className="text-(--secondaryFont) text-sm">
-                            6:25 AM
-                          </div>
+                  <div>
+                    <header className="my-4 font-bold">Delieverd</header>
+                    <div
+                      className={`p-3 border-2 border-(--border-color) rounded-md space-y-4 overflow-hidden overflow-x-auto  ${
+                        delivered.length > 0 ? "hover:overflow-y-scroll" : ""
+                      } custom-scrollbar max-h-53`}
+                    >
+                      {deliveredOrdersInfo.length == 0 ? (
+                        <div className="flex flex-col items-center justify-center text-center text-gray-400 py-4">
+                          <XCircle className="w-8 h-8 mb-2" />
+                          <p className="font-medium">No packages</p>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+                      ) : (
+                        deliveredOrdersInfo?.map((order) => (
+                          <div className="min-w-sm 2xl:min-w-fit hover:opacity-90 transition-all  bg-(--secondary) p-3 rounded-md flex items-center gap-5">
+                            <img
+                              src="/order.png"
+                              className="rounded-full w-20 h-15"
+                              alt=""
+                            />
+                            <div className="w-full flex justify-between">
+                              <div>
+                                <div className="flex items-center gap-3">
+                                  <h3>Preparing order</h3>
+                                  <Eye
+                                    className="text-(--secondaryFont) mx-2 sm:mx-0 hover:brightness-50 cursor-pointer"
+                                    size={20}
+                                    onClick={() => navigate(`${order.id}`)}
+                                  />
+                                </div>
+                                <span className="text-sm">{order.id}</span>
+                              </div>
+                              <div className="text-(--secondaryFont) text-sm">
+                                {order.date}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </section>
         </div>

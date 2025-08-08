@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { NavLink, useParams } from "react-router";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast, Toaster } from "sonner";
+import { useDispatch, useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MultiSelect } from "../components/ui/MultiSelect";
+import LoadingButton from "../components/LoadingButton";
+import DiscountFormModal from "./AddDiscount";
+import TableComponent from "../components/TableComponent";
+import ConfirmPopUp from "../components/ConfirmPopUp";
+import EditFoodSkeleton from "../components/skeleton/EditFoodSkeleton";
+import { format } from "date-fns";
 
 import {
   ChevronRight,
@@ -38,9 +46,8 @@ import {
   Trash2,
   Eye,
 } from "lucide-react";
+
 import { editPackageSchema } from "../validation/addFoodValidations";
-import LoadingButton from "../components/LoadingButton";
-import { MultiSelect } from "../components/ui/MultiSelect";
 import {
   useGetPackageQuery,
   useCategoriesQuery,
@@ -50,24 +57,20 @@ import {
   usePackagesWithDiscountQuery,
   useBranchServicesQuery,
 } from "../store/apiSlice/apiSlice";
-import DiscountFormModal from "./AddDiscount";
-import TableComponent from "../components/TableComponent";
-import { useDispatch, useSelector } from "react-redux";
 import { openConfirmPopUp } from "../store/packageSlice";
-import ConfirmPopUp from "../components/ConfirmPopUp";
-import EditFoodSkeleton from "../components/skeleton/EditFoodSkeleton";
 
 const EditFood = () => {
   const { category, food: packageId } = useParams();
   const [imagePreview, setImagePreview] = useState(null);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [showDiscount, setShowDiscount] = useState(null);
-  const [viewOnly, setViewOnly] = useState(null);
+  const [viewOnly, setViewOnly] = useState(false);
   const [discountID, setDiscountID] = useState(null);
   const { confirmPopUpOpened } = useSelector((state) => state.package);
   const dispatch = useDispatch();
 
-  const { data: packageData, isLoading: isPackageLoading } =
+  // --- RTK Query Hooks for Data Fetching ---
+  const { data: packageResponse, isLoading: isPackageLoading } =
     useGetPackageQuery(packageId);
   const [updatePackage, { isLoading: isUpdating }] = useUpdatepackageMutation();
   const { data: packagesWithDiscount } = usePackagesWithDiscountQuery();
@@ -77,10 +80,45 @@ const EditFood = () => {
   const { data: occasionResponse } = useGetOccasionQuery();
   const { data: branchServicesResponse } = useBranchServicesQuery();
 
-  const packagesDiscounts = packagesWithDiscount?.packages.find(
-    (pkg) => pkg.id === +packageId
-  )?.discounts;
+  // --- Centralized Data Transformation using useMemo ---
+  const packageDetails = useMemo(() => {
+    const pkg = packageResponse;
+    if (!pkg) return null;
 
+    return {
+      name: pkg.name || "",
+      description: pkg.description || "",
+      photo: pkg.photo || null,
+      base_price: parseFloat(pkg.base_price) || 0,
+      branch_id: pkg.branch_id,
+      branchName: pkg.name_branch,
+      category_ids: pkg.categories?.map((c) => c.id) || [],
+      occasion_type_ids: pkg.occasion_types?.map((o) => o.id) || [],
+      serves_count: pkg.serves_count || 1,
+      max_extra_persons: pkg.max_extra_persons || 0,
+      price_per_extra_person: parseFloat(pkg.price_per_extra_person) || 0,
+      cancellation_policy: pkg.cancellation_policy || "",
+      prepayment_required: !!pkg.prepayment_required,
+      prepayment_amount: parseFloat(pkg.prepayment_amount) || 0,
+      is_active: !!pkg.is_active,
+      notes: pkg.notes || "",
+      branch_service_type_ids: pkg.branch_service_types?.map(
+        (s) => s.service_type_id
+      ),
+      items:
+        pkg.items?.map((item) => ({
+          food_item_name: item.food_item_name,
+          quantity: item.quantity || 1, // Assuming a default quantity
+        })) || [],
+      extras:
+        pkg.extras?.map((extra) => ({
+          name: extra.name,
+          price: parseFloat(extra.price) || 0,
+        })) || [],
+    };
+  }, [packageResponse]);
+
+  // --- Data for Select Inputs ---
   const mockCategories =
     categoriesResponse?.map((c) => ({ id: c.id, name: c.name })) || [];
   const mockOccasions =
@@ -90,21 +128,24 @@ const EditFood = () => {
       id: service_type.id,
       name: service_type.name,
     })) || [];
-  const mockBranches = packageData?.package?.branch
-    ? [
-        {
-          id: packageData.package.branch.id,
-          name: packageData.package.branch.description,
-        },
-      ]
-    : [];
+  const mockBranches = [
+    {
+      id: packageDetails?.branch_id,
+      name: packageDetails?.branchName,
+    },
+  ];
 
+  const packagesDiscounts = packagesWithDiscount?.packages.find(
+    (pkg) => pkg.id === +packageId
+  )?.discounts;
+
+  // --- React Hook Form Initialization ---
   const form = useForm({
     resolver: zodResolver(editPackageSchema),
     defaultValues: {
       name: "",
       description: "",
-      photo: "",
+      photo: null,
       base_price: 0,
       branch_id: undefined,
       category_ids: [],
@@ -141,44 +182,19 @@ const EditFood = () => {
     name: "extras",
   });
 
+  // --- Effect to Sync Form State with Fetched Data ---
   useEffect(() => {
-    if (packageData?.package) {
-      const pkg = packageData.package;
-      console.log(pkg);
-      form.reset({
-        name: pkg.name,
-        description: pkg.description,
-        photo: pkg.photo,
-        base_price: parseFloat(pkg.base_price),
-        branch_id: pkg.branch.id,
-        category_ids: pkg.categories?.map((c) => c.id) || [],
-        occasion_type_ids: pkg.occasion_types?.map((o) => o.id) || [],
-        branch_service_type_ids:
-          pkg.extra_services?.map((s) =>
-            parseInt(s.pivot.branch_service_type_id, 10)
-          ) || [],
-        serves_count: pkg.serves_count,
-        max_extra_persons: pkg.max_extra_persons,
-        price_per_extra_person: parseFloat(pkg.price_per_extra_person),
-        cancellation_policy: pkg.cancellation_policy,
-        prepayment_required: !!pkg.prepayment_required,
-        prepayment_amount: parseFloat(pkg.prepayment_amount),
-        is_active: !!pkg.is_active,
-        notes: pkg.notes,
-        items:
-          pkg.items?.map((item) => {
-            return { food_item_name: item.food_item.name, quantity: 2 };
-          }) || [],
-        extras: pkg.extras || [],
-      });
-      if (pkg.photo) {
-        setImagePreview(pkg.photo);
+    if (packageDetails) {
+      form.reset(packageDetails);
+      if (packageDetails.photo) {
+        setImagePreview(packageDetails.photo);
       }
     }
-  }, [packageData, form.reset]);
+  }, [packageDetails, form.reset]);
 
   const prepaymentRequired = form.watch("prepayment_required");
 
+  // --- Event Handlers ---
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -188,15 +204,13 @@ const EditFood = () => {
       setImagePreview(base64String);
       form.setValue("photo", base64String, { shouldValidate: true });
     };
-
     reader.readAsDataURL(file);
     e.target.value = "";
   };
 
-  console.log(form.getValues("items"));
   const removeImage = () => {
     setImagePreview(null);
-    form.setValue("photo", "", { shouldValidate: true });
+    form.setValue("photo", null, { shouldValidate: true });
   };
 
   const closeDiscountModal = () => {
@@ -213,10 +227,8 @@ const EditFood = () => {
 
   const handleShowDiscount = (discountID) => {
     setViewOnly(true);
-    const filteredDiscount = packagesDiscounts.filter(
-      (FD) => FD.id === discountID
-    );
-    setShowDiscount(...filteredDiscount);
+    const filteredDiscount = packagesDiscounts.find((d) => d.id === discountID);
+    setShowDiscount(filteredDiscount);
     setIsDiscountModalOpen(true);
   };
 
@@ -227,8 +239,8 @@ const EditFood = () => {
 
   const deleteDiscountHandler = async () => {
     try {
-      const response = await deleteDiscount(discountID);
-      toast.success(response.data.message);
+      const response = await deleteDiscount(discountID).unwrap();
+      toast.success(response.message);
       dispatch(openConfirmPopUp(false));
     } catch (error) {
       toast.error(error.data.message);
@@ -240,23 +252,21 @@ const EditFood = () => {
   };
 
   const onSubmit = async (data) => {
-    console.log(data);
     try {
       const response = await updatePackage({ id: packageId, ...data }).unwrap();
       toast.success(response.message);
     } catch (error) {
-      toast.error(error.data.message);
+      toast.error(error.data.message || "An unexpected error occurred.");
     }
   };
 
+  // --- Table Configuration for Discounts ---
   const tableHeader = [
-    { name: "ID", key: "id" },
-    { name: "Package ID", key: "package_id" },
     { name: "Value", key: "value" },
     { name: "Description", key: "description" },
-    { name: "Is Active", key: "is_active" },
-    { name: "Start At", key: "start_at" },
-    { name: "End At", key: "end_at" },
+    { name: "Status", key: "is_active" },
+    { name: "Starts", key: "start_at" },
+    { name: "Ends", key: "end_at" },
     {
       name: "Action",
       key: "action",
@@ -279,12 +289,11 @@ const EditFood = () => {
 
   const tableBody = packagesDiscounts?.map((discount) => ({
     id: discount.id,
-    package_id: discount.package_id,
-    value: discount.value,
+    value: `${discount.value}`,
     description: discount.description,
-    start_at: discount.start_at,
-    end_at: discount.end_at,
-    is_active: discount.isActive,
+    start_at: format(discount.start_at, "yyyy-MM-dd"),
+    end_at: format(discount.end_at, "yyyy-MM-dd"),
+    is_active: discount.is_active ? "Active" : "Inactive",
   }));
 
   if (isPackageLoading) {
@@ -298,7 +307,7 @@ const EditFood = () => {
           loading={deleteDiscountIsLoading}
           onConfirm={deleteDiscountHandler}
           onCancel={cancelPopUpHandler}
-          content={"Are You Sure You Want To Delete This Discount ?"}
+          content={"Are you sure you want to delete this discount?"}
         />
       )}
 
@@ -313,7 +322,7 @@ const EditFood = () => {
       <main className="p-4 sm:p-6 lg:p-8 bg-gray-50/50">
         <header className="flex justify-between items-center font-bold mb-6">
           <span className="text-sm sm:text-2xl text-(--primaryFont)">
-            Edit: {packageData?.package?.name || "Package"}
+            Edit: {packageDetails?.name || "Package"}
           </span>
           <div className="flex items-center gap-2 font-medium text-sm">
             <NavLink
@@ -321,18 +330,11 @@ const EditFood = () => {
               to={`/menu/${category}`}
               end
             >
-              {category.split("-")[0]}
+              {category?.split("-")[0]}
             </NavLink>
             <ChevronRight size={20} className="text-(--secondaryFont)" />
-            <NavLink
-              to={``}
-              className={({ isActive }) =>
-                `transition-all ${
-                  isActive ? "text-(--primary)" : "text-(--primaryFont)"
-                }`
-              }
-            >
-              Edit {packageData?.package?.name}
+            <NavLink to={``} className="text-(--primary)">
+              Edit {packageDetails?.name}
             </NavLink>
           </div>
         </header>
@@ -404,7 +406,7 @@ const EditFood = () => {
                             Package Status
                           </FormLabel>
                           <FormDescription className="text-(--secondaryFont)">
-                            Inactive packages will not be visible to customers.
+                            Inactive packages will not be visible.
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -428,13 +430,13 @@ const EditFood = () => {
                       </FormDescription>
                     </div>
                     <Button
-                      className="cursor-pointer"
                       type="button"
                       size="sm"
                       onClick={handleOpenAddDiscount}
+                      className="cursor-pointer"
+                      disabled={packagesDiscounts?.length > 0}
                     >
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Add New
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add New
                     </Button>
                   </div>
                   <TableComponent
@@ -464,7 +466,7 @@ const EditFood = () => {
                             <Input
                               placeholder="e.g., Premium Ramadan Package"
                               {...field}
-                              className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0"
+                              className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                             />
                           </FormControl>
                           <FormMessage />
@@ -483,7 +485,10 @@ const EditFood = () => {
                               type="number"
                               placeholder="e.g., 500"
                               {...field}
-                              className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0"
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value))
+                              }
+                              className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                             />
                           </FormControl>
                           <FormMessage />
@@ -503,7 +508,7 @@ const EditFood = () => {
                             <Textarea
                               placeholder="Describe the package..."
                               {...field}
-                              className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0"
+                              className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                             />
                           </FormControl>
                           <FormMessage />
@@ -543,9 +548,8 @@ const EditFood = () => {
                             variant="destructive"
                             size="icon"
                             onClick={() => removeItem(index)}
-                            className="cursor-pointer"
                           >
-                            <Trash2 className="h-4 w-4 " />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -555,13 +559,9 @@ const EditFood = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="mt-4 text-(--primaryFont) hover:text-(--primaryFont) cursor-pointer"
+                    className="mt-4 text-(--primaryFont) hover:text-(--primaryFont)"
                     onClick={() =>
-                      appendItem({
-                        food_item_name: "",
-                        is_optional: false,
-                        quantity: 2,
-                      })
+                      appendItem({ food_item_name: "", quantity: 1 })
                     }
                   >
                     <PlusCircle className="mr-2 h-4 w-4" /> Add Item
@@ -609,6 +609,9 @@ const EditFood = () => {
                                   type="number"
                                   placeholder="10"
                                   {...field}
+                                  onChange={(e) =>
+                                    field.onChange(parseFloat(e.target.value))
+                                  }
                                   className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                                 />
                               </FormControl>
@@ -622,9 +625,9 @@ const EditFood = () => {
                             variant="destructive"
                             size="icon"
                             onClick={() => removeExtra(index)}
-                            className="w-full cursor-pointer"
+                            className="w-full"
                           >
-                            <Trash2 className="h-4 w-4 " />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -634,7 +637,7 @@ const EditFood = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="mt-4 text-(--primaryFont) hover:text-(--primaryFont) cursor-pointer"
+                    className="mt-4 text-(--primaryFont) hover:text-(--primaryFont)"
                     onClick={() => appendExtra({ name: "", price: 0 })}
                   >
                     <PlusCircle className="mr-2 h-4 w-4" /> Add Extra
@@ -659,7 +662,7 @@ const EditFood = () => {
                             selected={field.value}
                             onChange={field.onChange}
                             placeholder="Select categories"
-                            className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0"
+                            className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                           />
                           <FormMessage />
                         </FormItem>
@@ -677,7 +680,7 @@ const EditFood = () => {
                             selected={field.value}
                             onChange={field.onChange}
                             placeholder="Select occasions"
-                            className="text-(--secondaryFont) overflow-hidden focus-visible:ring-(--primary) focus:border-0"
+                            className="text-(--secondaryFont) overflow-hidden focus-visible:ring-(--primary)"
                           />
                           <FormMessage />
                         </FormItem>
@@ -698,7 +701,7 @@ const EditFood = () => {
                             }
                           >
                             <FormControl>
-                              <SelectTrigger className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0">
+                              <SelectTrigger className="text-(--secondaryFont) focus-visible:ring-(--primary)">
                                 <SelectValue placeholder="Select a branch" />
                               </SelectTrigger>
                             </FormControl>
@@ -722,12 +725,12 @@ const EditFood = () => {
                             Service Type
                           </FormLabel>
                           <MultiSelect
-                            key={JSON.stringify(field.value)}
+                            key={field.value}
                             options={mockServiceTypes}
                             selected={field.value}
                             onChange={field.onChange}
                             placeholder="Select services"
-                            className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0"
+                            className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                           />
                           <FormMessage />
                         </FormItem>
@@ -745,7 +748,10 @@ const EditFood = () => {
                               type="number"
                               placeholder="e.g., 10"
                               {...field}
-                              className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0"
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value))
+                              }
+                              className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                             />
                           </FormControl>
                           <FormMessage />
@@ -764,7 +770,10 @@ const EditFood = () => {
                               type="number"
                               placeholder="e.g., 5"
                               {...field}
-                              className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0"
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value))
+                              }
+                              className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                             />
                           </FormControl>
                           <FormMessage />
@@ -783,7 +792,10 @@ const EditFood = () => {
                               type="number"
                               placeholder="e.g., 50"
                               {...field}
-                              className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0"
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value))
+                              }
+                              className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                             />
                           </FormControl>
                           <FormMessage />
@@ -810,7 +822,7 @@ const EditFood = () => {
                             <Textarea
                               placeholder="e.g., 24 hours before event..."
                               {...field}
-                              className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0"
+                              className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                             />
                           </FormControl>
                           <FormMessage />
@@ -848,7 +860,10 @@ const EditFood = () => {
                                 type="number"
                                 placeholder="e.g., 100"
                                 {...field}
-                                className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0"
+                                onChange={(e) =>
+                                  field.onChange(parseFloat(e.target.value))
+                                }
+                                className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                               />
                             </FormControl>
                             <FormMessage />
@@ -867,7 +882,7 @@ const EditFood = () => {
                             <Textarea
                               placeholder="Add any internal notes here..."
                               {...field}
-                              className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0"
+                              className="text-(--secondaryFont) focus-visible:ring-(--primary)"
                             />
                           </FormControl>
                           <FormMessage />
@@ -884,20 +899,19 @@ const EditFood = () => {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => form.reset()}
-                className="text-(--secondaryFont) cursor-pointer hover:bg-gray-100"
+                onClick={() => form.reset(packageDetails)}
+                className="text-(--secondaryFont) hover:bg-gray-100 cursor-pointer"
               >
-                <Undo2 className="mr-2 h-4 w-4" />
-                Reset Changes
+                <Undo2 className="mr-2 h-4 w-4" /> Reset Changes
               </Button>
               <LoadingButton
                 isButton={true}
-                btnClass={"cursor-pointer"}
                 type="submit"
                 loadingText="Saving..."
                 text="Save Changes"
                 disabled={isUpdating}
                 icon={<Save className="mr-2 h-4 w-4" />}
+                btnClass={"cursor-pointer"}
               />
             </div>
           </form>

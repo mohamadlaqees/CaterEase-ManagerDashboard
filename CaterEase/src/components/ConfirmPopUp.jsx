@@ -1,13 +1,33 @@
 import { X } from "lucide-react"; // Assuming X is your close icon
 import { Button } from "@/components/ui/button";
 import LoadingButton from "./LoadingButton";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { resonSchema } from "../validation/orderValidation";
 
 const ConfirmPopUp = ({
   content, // The message to display (e.g., "Are you sure you want to delete this item?")
   onConfirm, // Callback function when user confirms
   onCancel, // Callback function when user cancels
   loading,
+  reason,
 }) => {
+  const form = useForm({
+    resolver: zodResolver(resonSchema),
+    defaultValues: {
+      rejection_reason: "",
+    },
+  });
   return (
     <>
       {/* Overlay */}
@@ -28,37 +48,90 @@ const ConfirmPopUp = ({
             onClick={onCancel}
           />
         </div>
+        {reason ? (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onConfirm)}>
+              <div className="text-center my-6">
+                <p className="text-lg font-semibold mb-4">{content}</p>
+                <p className="text-(--secondaryFont)">
+                  This action cannot be undone.
+                </p>
+              </div>
+              <FormField
+                name="rejection_reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-(--primaryFont)">
+                      Rejection Reason
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Rejection Reason"
+                        className="text-(--secondaryFont)  focus-visible:ring-(--primary)"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              ></FormField>
+              <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full sm:w-auto text-(--primary) h-10 text-sm cursor-pointer transition-all"
+                  onClick={onCancel}
+                >
+                  Cancel
+                </Button>
+                <LoadingButton
+                  btnClass={
+                    "w-full sm:w-auto h-10 text-sm cursor-pointer bg-[#e75858] hover:bg-[#e75858] hover:brightness-105 transition-all text-white"
+                  }
+                  disabled={loading}
+                  isButton={true}
+                  loadingText={"Confirming..."}
+                  text={"Confirm"}
+                  type={"submit"}
+                  spinColor={"#e75858"}
+                />
+              </div>
+            </form>
+          </Form>
+        ) : (
+          <>
+            <div className="text-center my-6">
+              <p className="text-lg font-semibold mb-4">{content}</p>
+              <p className="text-(--secondaryFont)">
+                This action cannot be undone.
+              </p>
+            </div>
 
-        <div className="text-center my-6">
-          <p className="text-lg font-semibold mb-4">{content}</p>
-          <p className="text-(--secondaryFont)">
-            This action cannot be undone.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-          <Button
-            type="button"
-            variant="secondary"
-            className="w-full sm:w-auto text-(--primary) h-10 text-sm cursor-pointer transition-all"
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-          <div onClick={onConfirm}>
-            <LoadingButton
-              btnClass={
-                "w-full sm:w-auto h-10 text-sm cursor-pointer bg-[#e75858] hover:bg-[#e75858] hover:brightness-105 transition-all text-white"
-              }
-              disabled={loading}
-              isButton={true}
-              loadingText={"Confirming..."}
-              text={"Confirm"}
-              type={"button"}
-              spinColor={"#e75858"}
-            />
-          </div>
-        </div>
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full sm:w-auto text-(--primary) h-10 text-sm cursor-pointer transition-all"
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+              <div onClick={onConfirm}>
+                <LoadingButton
+                  btnClass={
+                    "w-full sm:w-auto h-10 text-sm cursor-pointer bg-[#e75858] hover:bg-[#e75858] hover:brightness-105 transition-all text-white"
+                  }
+                  disabled={loading}
+                  isButton={true}
+                  loadingText={"Confirming..."}
+                  text={"Confirm"}
+                  type={"button"}
+                  spinColor={"#e75858"}
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );
