@@ -8,17 +8,24 @@ import { useLogOutMutation } from "../store/apiSlice/apiSlice";
 import LoadingButton from "./LoadingButton";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const HeaderBar = ({ sidebarRef, restaurantName, restaurantPhoto }) => {
-  const [logOut, { isError, isLoading, isSuccess, error }] =
-    useLogOutMutation();
+const HeaderBar = ({ sidebarRef }) => {
+  const [logOut, { isLoading, error }] = useLogOutMutation();
   const dispatch = useDispatch();
   const { sidebarOpened } = useSelector((state) => state.sidebar);
+  const { branchInfo } = useSelector((state) => state.restaurant);
   const [dropMenu, setDropMenu] = useState(false);
   const [notifications, setNotifications] = useState(false);
   const menu = useRef();
   const notification = useRef();
   const notificationBell = useRef();
   const navigate = useNavigate();
+
+  const restaurantInfo = {
+    name: branchInfo?.branch?.description,
+    photo: branchInfo?.branch?.restaurant_photo,
+  };
+
+  const { name: restaurantName, photo: restaurantPhoto } = restaurantInfo;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -139,7 +146,7 @@ const HeaderBar = ({ sidebarRef, restaurantName, restaurantPhoto }) => {
               <div
                 className={`sm:hidden text-sm p-2 mb-0 text-center border-b-1 m w-full `}
               >
-                <h3 className="text-(--primaryFont)">Shish and Kafta</h3>
+                <h3 className="text-(--primaryFont)">{restaurantName}</h3>
                 <p className="text-center text-(--secondaryFont)">
                   Restaurant
                 </p>{" "}
