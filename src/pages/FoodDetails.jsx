@@ -63,6 +63,8 @@ const FoodDetails = () => {
       amount: packageResponse?.prepayment_amount,
     },
     servicesNames: services,
+    rating: packageResponse.average_rating,
+    reviews: packageResponse.reviews_count,
   };
 
   // Destructure for cleaner JSX
@@ -85,6 +87,8 @@ const FoodDetails = () => {
     isActive,
     prepayment,
     servicesNames,
+    reviews,
+    rating,
   } = packageDetails;
 
   const categoryNames = categories?.map((ctg) => ctg.name);
@@ -213,10 +217,10 @@ const FoodDetails = () => {
             </div>
             <div className="flex items-center gap-3 mt-2">
               <div className="border-r-2 border-(--border-color) pr-3">
-                {renderStars(5, 30)}
+                {renderStars(rating)}
               </div>
               <span className="text-(--secondaryFont) font-bold text-xs sm:text-sm">
-                5 <span className="text-xl">.</span> 1k reviews
+                {rating} <span className="text-xl">.</span> {reviews} reviews
               </span>
             </div>
           </div>

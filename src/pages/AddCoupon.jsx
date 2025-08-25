@@ -56,7 +56,7 @@ const AddCoupon = ({ customerID }) => {
       }
     } catch (error) {
       console.log(error);
-      toast.success(error.data.message, {
+      toast.error(error.data.message, {
         style: {
           background: "white",
           color: "#ef4444",

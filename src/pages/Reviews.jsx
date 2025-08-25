@@ -182,7 +182,7 @@ const Reviews = () => {
 
             <section className="text-sm sm:text-base border-t-2 border-(--border-color)">
               <div className=" mt-10  py-10 lg:px-40 w-full flex flex-col lg:flex-row gap-5 lg:gap-40  border-b-2 border-(--border-color)">
-                {feedback.length > 0 ? (
+                {feedback?.length > 0 ? (
                   (<div className="flex items-center lg:items-start  gap-5 ">
                     <img
                       src="/person.png"

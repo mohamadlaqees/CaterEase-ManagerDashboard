@@ -178,7 +178,7 @@ const AddPackage = () => {
                 to=""
                 className={({ isActive }) =>
                   `transition-all ${
-                    isActive ? "text-(--primary)" : "text-(--primaryFont)"
+                    isActive ? "text-(--primary) " : "text-(--primaryFont)"
                   }`
                 }
               >

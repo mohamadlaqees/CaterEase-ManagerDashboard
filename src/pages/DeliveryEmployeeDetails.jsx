@@ -278,7 +278,7 @@ const DeliveryEmployeeDetails = () => {
                       <div className=" text-(--primaryFont)">
                         <Link
                           to="edit-delivery-employee"
-                          className="block px-4 py-2 text-sm hover:bg-gray-100"
+                          className="block px-4 text-left py-2 text-sm hover:bg-gray-100"
                         >
                           Edit
                         </Link>

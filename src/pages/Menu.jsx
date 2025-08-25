@@ -96,7 +96,7 @@ const Menu = () => {
       name: pkg.name,
       price: pkg.base_price,
       rating: pkg.average_rating,
-      reviews: "",
+      reviews: pkg.reviewsCount,
       image: pkg.photo,
       category: pkg.categories?.map((ctg) => {
         return {
@@ -356,12 +356,12 @@ const Menu = () => {
                             <span className="text-(--primary) font-bold text-lg sm:text-xl">
                               {Ditem.price}
                             </span>
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-col items-start  sm:flex-row items-center gap-3">
                               <div>{renderStars(Ditem.rating)}</div>
                               <span className="text-(--secondaryFont) font-bold text-xs sm:text-sm">
                                 {Ditem.rating}
                                 <span className="text-xl">.</span>
-                                {Ditem.reviews}
+                                {Ditem.reviews} reviews
                               </span>
                             </div>
                           </div>

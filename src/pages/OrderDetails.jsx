@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import AssignOrder from "./AssignOrder";
 import {
   useAcceptOrderMutation,
+  useAssignOrderMutation,
   useOrderQuery,
   useRejectOrderMutation,
 } from "../store/apiSlice/apiSlice";
@@ -58,9 +59,9 @@ const tableHeader = [
 ];
 
 const OrderDetails = () => {
+  const { assignOrderOpened } = useSelector((state) => state.order);
   const { orderID } = useParams();
   const { confirmPopUpOpened } = useSelector((state) => state.menu);
-  const [currentStep, setCurrentStep] = useState(1);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const dispatch = useDispatch();
   const { data: orderResponse, isLoading } = useOrderQuery(orderID);
@@ -68,8 +69,15 @@ const OrderDetails = () => {
     useAcceptOrderMutation();
   const [rejectOrder, { isLoading: rejectOrderIsLoading }] =
     useRejectOrderMutation();
+  const [assignOrder, { isLoading: assignOrderIsLoading }] =
+    useAssignOrderMutation(undefined, {
+      skip: !assignOrderOpened,
+    });
 
   const orderid = orderResponse?.order.id;
+  const deliveryInfo = {
+    delivery_person_id: orderResponse?.order.delivery_info?.delivery_person_id,
+  };
   const customerInfo = {
     name: orderResponse?.order.customer.name,
     phone: orderResponse?.order.customer.phone,
@@ -96,9 +104,6 @@ const OrderDetails = () => {
     apartment: customerInfo.address?.apartment,
   };
 
-  const delieveryInfo = {
-    deliveryID: orderResponse?.order.delivery_info?.delivery_person_id || null,
-  };
   const packages = orderResponse?.order?.details;
   const {
     name,
@@ -111,7 +116,12 @@ const OrderDetails = () => {
     approved_at,
   } = customerInfo;
   const { city, street, building, floor, apartment } = addressInfo;
-  const { deliveryID } = delieveryInfo;
+  const { delivery_person_id } = deliveryInfo;
+  const [currentStep, setCurrentStep] = useState(
+    is_approved ? 2 : deliveryInfo !== null ? 3 : true ? 4 : 1
+  );
+
+  console.log(currentStep);
 
   const tableBody = packages?.map((pkg) => {
     return {
@@ -169,7 +179,6 @@ const OrderDetails = () => {
   };
 
   const rejectOrderHandler = async (data) => {
-    console.log(orderID);
     try {
       const response = await rejectOrder({ orderID, data }).unwrap();
       toast.success(response.message, {
@@ -192,6 +201,31 @@ const OrderDetails = () => {
     }
   };
 
+  const assignOrderHandler = async (DID) => {
+    try {
+      await assignOrder({
+        order_id: orderID,
+        delivery_person_id: DID,
+        action: "assign",
+      }).unwrap();
+      toast.success(`${"Order has been assigned to delivery employee"}`, {
+        style: {
+          background: "white",
+          color: "#A1CA46",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
+    } catch (error) {
+      toast.success(error?.data?.message, {
+        style: {
+          background: "white",
+          color: "#ef4444",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
+    }
+  };
+
   return (
     <div className="relative">
       {confirmPopUpOpened && (
@@ -204,7 +238,11 @@ const OrderDetails = () => {
         />
       )}
       <Toaster position="top-center" richColors />
-      <AssignOrder orderID={+orderID} />
+      <AssignOrder
+        orderID={+orderID}
+        assignOrder={assignOrderHandler}
+        assignOrderIsLoading={assignOrderIsLoading}
+      />
       <main className=" text-(--primaryFont) py-10 px-3 sm:p-10 ">
         <header className="flex justify-between items-center  font-bold mb-5">
           <span className="text-sm sm:text-2xl ">Order Details</span>
@@ -358,12 +396,14 @@ const OrderDetails = () => {
                 </div>
               </div>
 
-              <div className="2xl:h-lvh  flex flex-col gap-10  2xl:justify-between mx-5 mb-10">
+              <div
+                className={`2xl:min-h-screen  flex flex-col gap-10   mx-5 mb-10  `}
+              >
                 <div
                   className={`transition-all ${
-                    is_approved === 1
+                    is_approved && !delivery_person_id
                       ? "opacity-100 translate-y-0 pointer-events-auto"
-                      : "opacity-0 translate-y-full pointer-events-none"
+                      : "hidden translate-y-full pointer-events-none"
                   } 
                    2xl:w-[280px] w-full mt-10  border-2 border-(border-color)  rounded-md`}
                 >
@@ -383,7 +423,7 @@ const OrderDetails = () => {
                     </div>
                   </>
                 </div>
-                {is_approved === 1 && deliveryID && (
+                {is_approved === 1 && delivery_person_id && (
                   <div
                     className={`transition-all opacity-100 translate-y-0 pointer-events-auto 2xl:w-[280px] w-full mt-10  border-2 border-(border-color)  rounded-md`}
                   >
@@ -437,15 +477,14 @@ const OrderDetails = () => {
                     </>
                   </div>
                 )}
-                <div className="flex  flex-col text-sm  sm:text-base  items-center sm:flex-row  sm:justify-end gap-10 ">
-                  {is_approved === 1 && deliveryID === null && (
+                <div className="flex-grow" />
+                <div className="flex  flex-col text-sm  sm:text-base  items-center sm:flex-row   gap-10 ">
+                  {is_approved === 1 && !delivery_person_id && (
                     <Button
                       onClick={openPopUpHandler}
                       type="button"
                       variant="secondary"
-                      className={`w-full ${
-                        is_approved ? "w-full" : "sm:w-30"
-                      }  bg-[#fdecec] hover:bg-[#ef4444] hover:text-white text-[#ef4444] h-10 text-base cursor-pointer`}
+                      className={`w-full 2xl:w-60 m-0 2xl:m-auto  bg-[#fdecec] hover:bg-[#ef4444] hover:text-white text-[#ef4444] h-10 text-base cursor-pointer`}
                     >
                       Reject
                     </Button>
@@ -453,7 +492,7 @@ const OrderDetails = () => {
                   {is_approved === 0 && (
                     <LoadingButton
                       isButton={true}
-                      btnClass={`w-full cursor-pointer  h-10 text-base `}
+                      btnClass={`w-full 2xl:w-60 m-0 2xl:m-auto cursor-pointer  h-10 text-base `}
                       spinColor=""
                       type="submit"
                       loadingText="Accepting..."

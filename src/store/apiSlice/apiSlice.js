@@ -334,7 +334,7 @@ export const apiSlice = createApi({
       invalidatesTags: ["order"],
     }),
     allDeliveryEmp: build.query({
-      query: () => "delivery/manage",
+      query: () => "order/alldelivery/manange",
       providesTags: ["allDelivery"],
     }),
     assignOrder: build.mutation({
@@ -345,7 +345,7 @@ export const apiSlice = createApi({
           ...data,
         },
       }),
-      invalidatesTags: ["allDelivery"],
+      invalidatesTags: ["allDelivery", "order"],
     }),
 
     //Report

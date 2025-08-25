@@ -58,8 +58,8 @@ const AddDeliveryEmployee = () => {
       is_available: data.isAvailable,
     };
     try {
-      const response = await addDeliveryEmployee(transformedData).unwrap();
-      toast.success(response?.message || "Employee added successfully!");
+      await addDeliveryEmployee(transformedData).unwrap();
+      toast.success("Delivery Employee created successfully!");
       form.reset();
     } catch (error) {
       const errorEntries = Object.entries(error.data.errors) || "";

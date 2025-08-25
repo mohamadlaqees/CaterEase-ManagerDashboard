@@ -81,7 +81,8 @@ const tableHeader = [
 const Orders = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState("");
-  const [date, setDate] = useState();
+  const [date, setDate] = useState(undefined);
+  const formattedDate = date ? format(date, "yyyy-MM-dd") : "";
   const { data: orderHistory, isLoading } = useOrderHistoryQuery();
   const {
     data: orderStatusSearchResponse,
@@ -95,7 +96,9 @@ const Orders = () => {
   const {
     data: orderDateSearchResponse,
     isFetching: orderDateSearchIsLoading,
-  } = useOrderDateSearchQuery(date ? format(date, "yyyy-MM-dd") : "");
+  } = useOrderDateSearchQuery(formattedDate, {
+    skip: !date,
+  });
 
   const tableBody = orderHistory?.orders.map((order) => {
     return {
@@ -164,7 +167,6 @@ const Orders = () => {
         <OrdersSkeleton />
       ) : (
         <div className="flex gap-5 flex-col 2xl:flex-row">
-          {/* className="text-sm sm:text-base flex justify-center  md:justify-start flex-wrap 2xl:flex-nowrap gap-10 " */}
           <section className="basis-1/2 space-y-5">
             <div className="flex flex-col md:flex-row gap-10 justify-between">
               <div className="basis-1/2 flex items-center gap-5 p-5 border-2 border-(--border-color) rounded-md  w-full md:w-fit  min-w-xs">
@@ -204,7 +206,6 @@ const Orders = () => {
                       <SelectItem value="all">All</SelectItem>
                       <SelectItem value="delivered">Delivered</SelectItem>
                       <SelectItem value="cancelled">Cancelled</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="preparing">Preparing</SelectItem>
                     </SelectGroup>
@@ -231,13 +232,10 @@ const Orders = () => {
               </div>
             </div>
           </section>
-          {/* mt-10 flex-wrap xl:flex-nowrap text-sm sm:text-base flex justify-center 2xl:justify-between gap-10  */}
           <section className="basis-1/2 ">
             <div
               className={`p-8 w-full 2xl:basis-1/2 border-2 border-(--border-color) rounded-md max-h-[720px] overflow-hidden ${
-                pending.length > 0 &&
-                preparing.length > 0 &&
-                delivered.length > 0
+                pending.length > 0 && preparing.length > 0
                   ? "hover:overflow-y-scroll"
                   : ""
               }  custom-scrollbar`}
@@ -252,7 +250,11 @@ const Orders = () => {
                       variant={"outline"}
                       className="basis-1/2  focus-visible:ring-(--primary) focus:border-0 border-(--border-color) border-2 h-10 placeholder-(--secondaryFont) text-(--secondaryFont)"
                     >
-                      {date ? format(date, "PPP") : <span>Orders Date</span>}
+                      {date ? (
+                        format(date, "yyyy-MM-dd")
+                      ) : (
+                        <span>Orders Date</span>
+                      )}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -295,11 +297,13 @@ const Orders = () => {
                             <div className="w-full flex justify-between">
                               <div>
                                 <div className="flex items-center gap-3">
-                                  <h3>Preparing order</h3>
+                                  <h3>Pending order</h3>
                                   <Eye
                                     className="text-(--secondaryFont) mx-2 sm:mx-0 hover:brightness-50 cursor-pointer"
                                     size={20}
-                                    onClick={() => navigate(`${order.id}`)}
+                                    onClick={() =>
+                                      navigate(`${order.status}/${order.id}`)
+                                    }
                                   />
                                 </div>
                                 <span className="text-sm">{order.id}</span>
@@ -341,7 +345,9 @@ const Orders = () => {
                                   <Eye
                                     className="text-(--secondaryFont) mx-2 sm:mx-0 hover:brightness-50 cursor-pointer"
                                     size={20}
-                                    onClick={() => navigate(`${order.id}`)}
+                                    onClick={() =>
+                                      navigate(`${order.status}/${order.id}`)
+                                    }
                                   />
                                 </div>
                                 <span className="text-sm">{order.id}</span>
@@ -379,11 +385,13 @@ const Orders = () => {
                             <div className="w-full flex justify-between">
                               <div>
                                 <div className="flex items-center gap-3">
-                                  <h3>Preparing order</h3>
+                                  <h3>Delivered order</h3>
                                   <Eye
                                     className="text-(--secondaryFont) mx-2 sm:mx-0 hover:brightness-50 cursor-pointer"
                                     size={20}
-                                    onClick={() => navigate(`${order.id}`)}
+                                    onClick={() =>
+                                      navigate(`${order.status}/${order.id}`)
+                                    }
                                   />
                                 </div>
                                 <span className="text-sm">{order.id}</span>
