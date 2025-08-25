@@ -56,6 +56,7 @@ import {
   useDeleteDiscountMutation,
   usePackagesWithDiscountQuery,
   useBranchServicesQuery,
+  useBranchInfoQuery,
 } from "../store/apiSlice/apiSlice";
 import { openConfirmPopUp } from "../store/packageSlice";
 
@@ -72,6 +73,7 @@ const EditFood = () => {
   // --- RTK Query Hooks for Data Fetching ---
   const { data: packageResponse, isLoading: isPackageLoading } =
     useGetPackageQuery(packageId);
+  const { data: branchInfoResponse } = useBranchInfoQuery();
   const [updatePackage, { isLoading: isUpdating }] = useUpdatepackageMutation();
   const { data: packagesWithDiscount } = usePackagesWithDiscountQuery();
   const [deleteDiscount, { isLoading: deleteDiscountIsLoading }] =
@@ -85,13 +87,18 @@ const EditFood = () => {
     const pkg = packageResponse;
     if (!pkg) return null;
 
+    const branchName =
+      +localStorage.getItem("branchID") === branchInfoResponse?.branch.id
+        ? branchInfoResponse?.branch.description
+        : "";
+
     return {
       name: pkg.name || "",
       description: pkg.description || "",
       photo: pkg.photo || null,
       base_price: parseFloat(pkg.base_price) || 0,
       branch_id: pkg.branch_id,
-      branchName: pkg.name_branch,
+      branchName,
       category_ids: pkg.categories?.map((c) => c.id) || [],
       occasion_type_ids: pkg.occasion_types?.map((o) => o.id) || [],
       serves_count: pkg.serves_count || 1,

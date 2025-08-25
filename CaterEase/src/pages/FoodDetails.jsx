@@ -13,23 +13,20 @@ import {
 } from "lucide-react";
 import { NavLink, useParams } from "react-router";
 import renderStars from "../util/renderStars";
-import {
-  useBranchServicesQuery,
-  useGetPackageQuery,
-} from "../store/apiSlice/apiSlice";
+import { useGetPackageQuery } from "../store/apiSlice/apiSlice";
 import { FoodDetailsSkeleton } from "../components/skeleton/FoodDetailsSkeleton";
 
 const FoodDetails = () => {
   const { category, food } = useParams();
   const { data: packageResponse, isLoading } = useGetPackageQuery(food);
-  const { data: branchServicesResponse } = useBranchServicesQuery();
 
   const calculateDiscountedPrice = (basePrice, discounts) => {
     if (!basePrice || !discounts || discounts.length === 0) {
       return { newPrice: basePrice || 0, discountValue: 0 };
     }
     const discount = discounts[0];
-    const discountValue = parseFloat(discount.amount);
+    const discountNum = +discount.amount;
+    const discountValue = parseFloat(discountNum);
     const newPrice = basePrice * (1 - discountValue / 100);
 
     return { newPrice, discountValue };
@@ -136,7 +133,7 @@ const FoodDetails = () => {
             {discountPercentage > 0 && (
               <div className="absolute top-4 right-4 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full flex items-center">
                 <Percent className="w-4 h-4 mr-1" />
-                {discountPercentage.amount} OFF
+                {discountPercentage} OFF
               </div>
             )}
           </div>
@@ -178,9 +175,6 @@ const FoodDetails = () => {
                     className="flex justify-between items-center"
                   >
                     <span>{extra.name}</span>
-                    <span className="font-semibold text-(--primary)">
-                      + ${parseFloat(extra.price).toFixed(2)}
-                    </span>
                   </li>
                 ))}
               </ul>

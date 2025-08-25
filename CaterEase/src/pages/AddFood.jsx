@@ -48,9 +48,12 @@ import {
 
 const AddPackage = () => {
   const [imagePreview, setImagePreview] = useState(null);
-  const { restaurantName } = useSelector((state) => state.restaurant);
+  const { branchInfo } = useSelector((state) => state.restaurant);
   const mockBranches = [
-    { id: localStorage.getItem("branchID"), name: restaurantName },
+    {
+      id: localStorage.getItem("branchID"),
+      name: branchInfo?.branch?.description,
+    },
   ];
   const [addPackage, { isLoading }] = useAddpackageMutation();
   const { data: categoriesResponse } = useCategoriesQuery();

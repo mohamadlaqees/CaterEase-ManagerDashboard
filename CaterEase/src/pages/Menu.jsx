@@ -35,6 +35,8 @@ const Menu = () => {
     navigate("add-food");
   };
 
+  console.log(promoResponse);
+
   const transformedCategories = categoriesResponse?.map((category) => {
     return {
       id: category?.id,
@@ -86,15 +88,26 @@ const Menu = () => {
   const transformedPromo = promoResponse?.packages.map((pkg) => {
     return {
       id: pkg.id,
-      discount: pkg.discounts,
+      discount: pkg.discounts?.map((dis) => {
+        return {
+          value: dis.value,
+        };
+      }),
       name: pkg.name,
       price: pkg.base_price,
-      rating: 0,
-      reviews: `0 reviews`,
+      rating: pkg.average_rating,
+      reviews: "",
       image: pkg.photo,
-      category: pkg.categories[0].id,
+      category: pkg.categories?.map((ctg) => {
+        return {
+          name: ctg.name,
+          id: ctg.id,
+        };
+      }),
     };
   });
+
+  console.log(transformedPromo);
 
   const choosenPopularCateogry = transformedCategories?.find(
     (category, inx) =>
@@ -102,9 +115,6 @@ const Menu = () => {
   )?.label;
   const choosenBestSellerCateogry = transformedCategories?.find(
     (category, inx) => category.id === transformedBestSeller?.[inx]?.category
-  )?.label;
-  const choosenPromoCateogry = transformedCategories?.find(
-    (category, inx) => category.id === transformedPromo?.[inx]?.category
   )?.label;
 
   useEffect(() => {
@@ -330,10 +340,10 @@ const Menu = () => {
                       <div
                         onClick={() =>
                           navigate(
-                            `${choosenPromoCateogry}-${Ditem.category}/${Ditem.id}`
+                            `${Ditem.category[0].name}-${Ditem.category[0].id}/${Ditem.id}`
                           )
                         }
-                        className="rounded-md border-2 border-(--border-color) hover:shadow-md cursor-pointer transition hover:-translate-y-1 hover:border-0 py-5 px-3 sm:px-5"
+                        className=" rounded-md border-2 border-(--border-color) hover:shadow-md cursor-pointer transition hover:-translate-y-1 hover:border-0 py-5 px-3 sm:px-5"
                       >
                         <span className="bg-[#e75858] text-sm p-2 text-white rounded-r-md relative right-5">
                           {Ditem.discount[0].value}
@@ -355,11 +365,7 @@ const Menu = () => {
                               </span>
                             </div>
                           </div>
-                          <img
-                            src={Ditem.image}
-                            className="w-26 h-20  object-contain"
-                            alt=""
-                          />
+                          <img src={Ditem.image} className=" w-25  " alt="" />
                         </div>
                       </div>
                     </CarouselItem>

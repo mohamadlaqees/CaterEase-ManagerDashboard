@@ -23,6 +23,7 @@ export const apiSlice = createApi({
     "updateDelivery",
     "order",
     "allDelivery",
+    "promo",
   ],
   endpoints: (build) => ({
     // Auth
@@ -104,8 +105,9 @@ export const apiSlice = createApi({
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
           const { data } = await queryFulfilled;
+          console.log(data);
           if (data && data.branch) {
-            localStorage.setItem("branchID", data.branch.original.branch.id);
+            localStorage.setItem("branchID", data.branch.id);
             dispatch(
               apiSlice.endpoints.earnings.initiate(
                 data.branch.original.branch.id
@@ -141,6 +143,7 @@ export const apiSlice = createApi({
     }),
     promo: build.query({
       query: () => `package-discounts/management`,
+      providesTags: ["promo"],
     }),
     addpackage: build.mutation({
       query: (packageInfo) => ({
@@ -184,14 +187,14 @@ export const apiSlice = createApi({
           ...discount,
         },
       }),
-      invalidatesTags: ["discount", "updatePackage", "category"],
+      invalidatesTags: ["discount", "updatePackage", "category", "promo"],
     }),
     deleteDiscount: build.mutation({
       query: (discountID) => ({
         url: `package-discounts/${discountID}/management`,
         method: "DELETE",
       }),
-      invalidatesTags: ["discount", "updatePackage", "category"],
+      invalidatesTags: ["discount", "updatePackage", "category", "promo"],
     }),
     branchServices: build.query({
       query: () => `ServiceType/manange/branch`,
