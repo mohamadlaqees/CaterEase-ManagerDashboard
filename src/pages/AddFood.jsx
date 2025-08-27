@@ -149,7 +149,13 @@ const AddPackage = () => {
     try {
       // The `data` object now includes `items` and `extras` automatically
       const response = await addPackage(data).unwrap();
-      toast.success(response.message || "Package created successfully!");
+      toast.success(response.message || "Package created successfully!", {
+        style: {
+          background: "white",
+          color: "#314E76",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
       form.reset(); // Resets to defaultValues, including empty arrays
       setImagePreview(null);
     } catch (error) {
@@ -709,15 +715,16 @@ const AddPackage = () => {
               <div className="flex justify-end gap-4 pt-6 border-t-2 border-(--border-color)">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
+                  className="text-(--secondaryFont) hover:text-(--primary) cursor-pointer "
                   onClick={() => {
                     form.reset();
                     removeImage();
                   }}
-                  className="text-(--secondaryFont) cursor-pointer hover:bg-gray-100"
                 >
                   Clear Form
                 </Button>
+
                 <LoadingButton
                   isButton={true}
                   btnClass={"cursor-pointer"}

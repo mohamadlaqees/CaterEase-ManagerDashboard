@@ -87,7 +87,7 @@ const DiscountFormModal = ({
       toast.success(response.message, {
         style: {
           background: "white",
-          color: "#A1CA46",
+          color: "#314E76",
           border: "1px solid hsl(var(--border))",
         },
       });
@@ -262,11 +262,14 @@ const DiscountFormModal = ({
               <div className="flex justify-end gap-4 pt-6">
                 <Button
                   type="button"
-                  variant="ghost"
-                  onClick={closeHandler}
-                  className="text-(--secondaryFont) cursor-pointer hover:bg-gray-100"
+                  variant="outline"
+                  onClick={() => {
+                    closeHandler();
+                    form.reset();
+                  }}
+                  className="text-(--secondaryFont) hover:text-(--primary) cursor-pointer "
                 >
-                  Cancle{" "}
+                  Clear Form
                 </Button>
                 <LoadingButton
                   isButton={true}

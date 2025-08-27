@@ -59,7 +59,13 @@ const AddDeliveryEmployee = () => {
     };
     try {
       await addDeliveryEmployee(transformedData).unwrap();
-      toast.success("Delivery Employee created successfully!");
+      toast.success("Delivery Employee created successfully!", {
+        style: {
+          background: "white",
+          color: "#314E76",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
       form.reset();
     } catch (error) {
       const errorEntries = Object.entries(error.data.errors) || "";
@@ -256,11 +262,11 @@ const AddDeliveryEmployee = () => {
               <div className="flex items-center justify-end gap-4 p-6 ">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => form.reset()}
-                  className="cursor-pointer"
+                  className="text-(--secondaryFont) hover:text-(--primary) cursor-pointer "
                 >
-                  Clear
+                  Clear Form
                 </Button>
                 <LoadingButton
                   disabled={isLoading}

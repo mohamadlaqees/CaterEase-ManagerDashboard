@@ -301,9 +301,7 @@ const Orders = () => {
                                   <Eye
                                     className="text-(--secondaryFont) mx-2 sm:mx-0 hover:brightness-50 cursor-pointer"
                                     size={20}
-                                    onClick={() =>
-                                      navigate(`${order.status}/${order.id}`)
-                                    }
+                                    onClick={() => navigate(`${order.id}`)}
                                   />
                                 </div>
                                 <span className="text-sm">{order.id}</span>
@@ -345,9 +343,7 @@ const Orders = () => {
                                   <Eye
                                     className="text-(--secondaryFont) mx-2 sm:mx-0 hover:brightness-50 cursor-pointer"
                                     size={20}
-                                    onClick={() =>
-                                      navigate(`${order.status}/${order.id}`)
-                                    }
+                                    onClick={() => navigate(`${order.id}`)}
                                   />
                                 </div>
                                 <span className="text-sm">{order.id}</span>
@@ -389,9 +385,7 @@ const Orders = () => {
                                   <Eye
                                     className="text-(--secondaryFont) mx-2 sm:mx-0 hover:brightness-50 cursor-pointer"
                                     size={20}
-                                    onClick={() =>
-                                      navigate(`${order.status}/${order.id}`)
-                                    }
+                                    onClick={() => navigate(`${order.id}`)}
                                   />
                                 </div>
                                 <span className="text-sm">{order.id}</span>

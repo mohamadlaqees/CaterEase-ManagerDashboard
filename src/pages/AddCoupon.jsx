@@ -49,7 +49,7 @@ const AddCoupon = ({ customerID }) => {
         toast.success("Coupon have been created successfully", {
           style: {
             background: "white",
-            color: "#A1CA46",
+            color: "#314E76",
             border: "1px solid hsl(var(--border))",
           },
         });

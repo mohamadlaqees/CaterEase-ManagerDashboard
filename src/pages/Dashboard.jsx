@@ -73,18 +73,18 @@ const chartConfig = {
 
 const tableHeader = [
   {
-    name: "Order ID",
-    key: "id",
-  },
-  {
-    name: "Dish",
+    name: "Order",
     key: "name",
     render: (row) => (
       <div className="flex items-center gap-3">
-        <img src={row.img} alt={row.name} className="w-12 h-12 rounded-full" />
+        <img
+          src={"/order.png"}
+          alt={row.name}
+          className="w-12 h-12 rounded-full"
+        />
         <div>
           <div>{row.name}</div>
-          <div>{renderStars(row.rate)}</div>
+          <div>{row.id}</div>
         </div>
       </div>
     ),
@@ -181,7 +181,7 @@ const Dashboard = () => {
       data?.name === "Soft Drinks" ? data.name.split(" ").join("-") : data.name
     })`,
   }));
-  const colorPalette = ["#A1CA46", "#46A1CA", "#F5D547", "#5CC48A"];
+  const colorPalette = ["#314E76", "#6A85A6", "#E89C68", "#4A919E"];
 
   const popularFoodConfig = popularFoodData?.reduce(
     (acc, item, index) => {
@@ -250,14 +250,10 @@ const Dashboard = () => {
           <span className="hidden sm:block w-0.5 h-20 bg-(--secondaryFont) mr-10 2xl:m-0" />
           <div className=" flex justify-center gap-20 sm:gap-30 2xl:gap-50">
             <span className="space-y-3 ">
-              <p className="text-[#1fbf75] text-center ">Income</p>
-              <span className="text-(--primaryFont) font-bold text-xl">
+              <p className="text-(--secondaryFont)  text-center ">Income</p>
+              <span className="text-(--primary) font-bold text-xl">
                 {earnings?.income} $
               </span>
-              <div className="text-[#1fbf75] flex gap-2.5 justify-center mt-2">
-                <CircleArrowUp className="" />
-                +15%
-              </div>
             </span>
           </div>
         </div>
@@ -383,12 +379,12 @@ const Dashboard = () => {
                   {/* Add a separate Bar component for each data key */}
                   <Bar
                     dataKey="deliveredOrders"
-                    fill="var(--color-deliveredOrders)"
+                    fill="var(--primary)"
                     radius={4} // Optional: adds rounded corners to the bars
                   />
                   <Bar
                     dataKey="cancelledOrders"
-                    fill="var(--color-cancelledOrders)"
+                    fill="var(--secondary)"
                     radius={4} // Optional: adds rounded corners to the bars
                   />
                 </BarChart>
@@ -478,14 +474,14 @@ const Dashboard = () => {
             </Card>
           </div>
         </div>
-        <div className="w-[335px] self-center sm:w-full mt-10 font-bold text-[#e3efc8]  py-5 px-8 rounded-md bg-(--primary)">
+        <div className="w-[335px] self-center sm:w-full mt-10 font-bold text-(--secondary)  py-5 px-8 rounded-md bg-(--primary)">
           <h1 className="mb-4">Orders Delivered</h1>
           <p className="mb-2 text-xl text-white">
             {deliveredOrdersResponse?.total_delivered_items}
           </p>
           <div className="space-y-8">
             {deliveredOrdersResponse?.category_distribution.map((order) => (
-              <div className="flex  justify-between border-b-2 border-[#e3efc8]">
+              <div className="flex  justify-between border-b-2 border-(--secondary)">
                 {order.category} ({order.percentage}) <span>{order.count}</span>
               </div>
             ))}

@@ -154,13 +154,13 @@ const OrderDetails = () => {
       toast.success(response.message, {
         style: {
           background: "white",
-          color: "#A1CA46",
+          color: "#314E76",
           border: "1px solid hsl(var(--border))",
         },
       });
     } catch (error) {
       console.log(error);
-      toast.success(error?.data?.message, {
+      toast.error(error?.data?.message, {
         style: {
           background: "white",
           color: "#ef4444",
@@ -184,14 +184,14 @@ const OrderDetails = () => {
       toast.success(response.message, {
         style: {
           background: "white",
-          color: "#A1CA46",
+          color: "#314E76",
           border: "1px solid hsl(var(--border))",
         },
       });
       dispatch(openConfirmPopUp(false));
     } catch (error) {
       console.log(error);
-      toast.success(error?.data?.message, {
+      toast.error(error?.data?.message, {
         style: {
           background: "white",
           color: "#ef4444",
@@ -211,12 +211,12 @@ const OrderDetails = () => {
       toast.success(`${"Order has been assigned to delivery employee"}`, {
         style: {
           background: "white",
-          color: "#A1CA46",
+          color: "#314E76",
           border: "1px solid hsl(var(--border))",
         },
       });
     } catch (error) {
-      toast.success(error?.data?.message, {
+      toast.error(error?.data?.message, {
         style: {
           background: "white",
           color: "#ef4444",
@@ -483,7 +483,7 @@ const OrderDetails = () => {
                     <Button
                       onClick={openPopUpHandler}
                       type="button"
-                      variant="secondary"
+                      variant="outline"
                       className={`w-full 2xl:w-60 m-0 2xl:m-auto  bg-[#fdecec] hover:bg-[#ef4444] hover:text-white text-[#ef4444] h-10 text-base cursor-pointer`}
                     >
                       Reject

@@ -247,7 +247,13 @@ const EditFood = () => {
   const deleteDiscountHandler = async () => {
     try {
       const response = await deleteDiscount(discountID).unwrap();
-      toast.success(response.message);
+      toast.success(response.message, {
+        style: {
+          background: "white",
+          color: "#314E76",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
       dispatch(openConfirmPopUp(false));
     } catch (error) {
       toast.error(error.data.message);
@@ -261,7 +267,13 @@ const EditFood = () => {
   const onSubmit = async (data) => {
     try {
       const response = await updatePackage({ id: packageId, ...data }).unwrap();
-      toast.success(response.message);
+      toast.success(response.message, {
+        style: {
+          background: "white",
+          color: "#314E76",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
     } catch (error) {
       toast.error(error.data.message || "An unexpected error occurred.");
     }
@@ -905,9 +917,9 @@ const EditFood = () => {
             <div className="flex justify-end gap-4 pt-6 border-t-2 border-(--border-color)">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
+                className="text-(--secondaryFont) hover:text-(--primary) cursor-pointer "
                 onClick={() => form.reset(packageDetails)}
-                className="text-(--secondaryFont) hover:bg-gray-100 cursor-pointer"
               >
                 <Undo2 className="mr-2 h-4 w-4" /> Reset Changes
               </Button>

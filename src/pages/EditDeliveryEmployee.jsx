@@ -91,7 +91,13 @@ const EditDeliveryEmployee = () => {
         deliveryEmployee,
         payload,
       }).unwrap();
-      toast.success(response.message || "Employee updated successfully!");
+      toast.success(response.message || "Employee updated successfully!", {
+        style: {
+          background: "white",
+          color: "#314E76",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
     } catch (error) {
       toast.error(error?.data?.message || "An update error occurred.");
     }
@@ -283,9 +289,9 @@ const EditDeliveryEmployee = () => {
               <div className="flex items-center justify-end gap-4 p-6 bg-gray-50 border-t">
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="outline"
+                  className="text-(--secondaryFont) hover:text-(--primary) cursor-pointer "
                   onClick={() => form.reset()}
-                  className="cursor-pointer"
                 >
                   Cancel
                 </Button>

@@ -107,19 +107,20 @@ const ConfirmPopUp = ({
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+            <div className="flex justify-center gap-4 mt-8">
               <Button
                 type="button"
-                variant="secondary"
-                className="w-full sm:w-auto text-(--primary) h-10 text-sm cursor-pointer transition-all"
+                variant="outline"
+                className="text-(--secondaryFont) hover:text-(--primary) cursor-pointer "
                 onClick={onCancel}
               >
                 Cancel
               </Button>
               <div onClick={onConfirm}>
                 <LoadingButton
+                  variant={"destructive"}
                   btnClass={
-                    "w-full sm:w-auto h-10 text-sm cursor-pointer bg-[#e75858] hover:bg-[#e75858] hover:brightness-105 transition-all text-white"
+                    "w-full sm:w-auto h-10 text-sm cursor-pointer  hover:brightness-105 transition-all text-white"
                   }
                   disabled={loading}
                   isButton={true}
