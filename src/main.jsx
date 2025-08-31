@@ -23,6 +23,7 @@ import AddDeliveryEmployee from "./pages/AddDeliveryEmployee.jsx";
 import DeliveryEmployeeDetails from "./pages/DeliveryEmployeeDetails.jsx";
 import EditDeliveryEmployee from "./pages/EditDeliveryEmployee.jsx";
 import ProtectRoute from "./components/protectRoute.jsx";
+import "./firebase";
 
 const routes = createBrowserRouter([
   {

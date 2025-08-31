@@ -84,6 +84,7 @@ const OrderDetails = () => {
   const { orderID } = useParams();
   const { confirmPopUpOpened } = useSelector((state) => state.menu);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [loadingDeliveryPersonId, setLoadingDeliveryPersonId] = useState(null);
 
   const dispatch = useDispatch();
   const { data: orderResponse, isLoading } = useOrderQuery(orderID);
@@ -111,6 +112,9 @@ const OrderDetails = () => {
 
   const orderid = orderResponse?.order.id;
   const deliveryInfo = {
+    deliveryEmpName: orderResponse?.order.delivery_info?.delivery_person?.name,
+    deliveryEmpPhone:
+      orderResponse?.order.delivery_info?.delivery_person?.phone,
     deliveryPersonStatus: orderResponse?.order.delivery_info?.status,
     deliveryPersonAcceptence:
       orderResponse?.order.delivery_info?.acceptance_status,
@@ -153,20 +157,18 @@ const OrderDetails = () => {
     floor: customerInfo.address?.floor,
     apartment: customerInfo.address?.apartment,
   };
+
   const packages = orderResponse?.order?.details;
-  const {
-    name,
-    phone,
-    email,
-    gender,
-    delivery_time,
-    date,
-    is_approved,
-    approved_at,
-  } = customerInfo;
+  const { name, phone, email, gender, delivery_time, is_approved } =
+    customerInfo;
+
   const { city, street, building, floor, apartment } = addressInfo;
-  const { deliveryPersonAcceptence, deliveryPersonStatus } = deliveryInfo;
-  // const [currentStep, setCurrentStep] = useState(1);
+  const {
+    deliveryPersonAcceptence,
+    deliveryPersonStatus,
+    deliveryEmpName,
+    deliveryEmpPhone,
+  } = deliveryInfo;
 
   const tableBody = packages?.map((pkg) => {
     return {
@@ -245,6 +247,7 @@ const OrderDetails = () => {
   };
 
   const assignOrderHandler = async (DID) => {
+    setLoadingDeliveryPersonId(DID); // Set loading for this specific ID
     try {
       await assignOrder({
         order_id: orderID,
@@ -258,6 +261,7 @@ const OrderDetails = () => {
           border: "1px solid hsl(var(--border))",
         },
       });
+      dispatch(openAssignOrder(false));
     } catch (error) {
       toast.error(error?.data?.message, {
         style: {
@@ -266,6 +270,8 @@ const OrderDetails = () => {
           border: "1px solid hsl(var(--border))",
         },
       });
+    } finally {
+      setLoadingDeliveryPersonId(null); // Clear loading state regardless of outcome
     }
   };
 
@@ -349,8 +355,8 @@ const OrderDetails = () => {
   if (deliveryPersonStatus === "assigned") {
     currentStep = 5;
   }
-  if (deliveryPersonAcceptence === "picked_up") {
-    currentStep = 6;
+  if (deliveryPersonAcceptence) {
+    currentStep = 7;
   }
 
   return (
@@ -365,11 +371,12 @@ const OrderDetails = () => {
         />
       )}
       <Toaster position="top-center" richColors />
-      {deliveryPersonStatus !== "assignrd" && (
+      {deliveryPersonStatus !== "assigned" && (
         <AssignOrder
           orderID={+orderID}
           assignOrder={assignOrderHandler}
           assignOrderIsLoading={assignOrderIsLoading}
+          loadingDeliveryPersonId={loadingDeliveryPersonId}
         />
       )}
       <main className=" text-(--primaryFont) py-10 px-3 sm:p-10 ">
@@ -579,7 +586,10 @@ const OrderDetails = () => {
               >
                 <div
                   className={`transition-all ${
-                    !!is_approved && !deliveryPersonStatus
+                    !!is_approved &&
+                    !deliveryPersonStatus &&
+                    (payment.billStatus === "paid" ||
+                      payment.billStatus === "partially_paid")
                       ? "opacity-100 translate-y-0 pointer-events-auto"
                       : "hidden translate-y-full pointer-events-none"
                   } 
@@ -618,38 +628,26 @@ const OrderDetails = () => {
                         <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
                           <h3 className="">Delivery employee :</h3>
                           <p className="text-(--secondaryFont)">
-                            Jaylon Calzoni
+                            {deliveryEmpName}
                           </p>
                         </div>
                         <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
                           <h3 className="">Phone :</h3>
                           <p className="text-(--secondaryFont)">
-                            (123) 456-7890
+                            {deliveryEmpPhone}
                           </p>
                         </div>
                         <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
                           <h3 className="">Payment Mode :</h3>
                           <p className="text-(--secondaryFont)">
-                            Upon delivery
+                            {payment.billStatus + " " + payment.paymentStatus}
                           </p>
-                        </div>
-                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
-                          <h3 className="">Distance :</h3>
-                          <p className="text-(--secondaryFont)">15 KM</p>
-                        </div>
-                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color) ">
-                          <h3 className="">Estimation time :</h3>
-                          <p className="text-(--secondaryFont)">30 min</p>
                         </div>
                         <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color) ">
                           <h3 className="">Date :</h3>
                           <p className="text-(--secondaryFont)">
                             2025 / 9 / 15
                           </p>
-                        </div>
-                        <div className="font-normal text-sm p-3 flex justify-between ">
-                          <h3 className="">Starting Time :</h3>
-                          <p className="text-(--secondaryFont)">10:00 AM</p>
                         </div>
                       </div>
                     </>

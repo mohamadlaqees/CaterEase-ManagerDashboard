@@ -3,12 +3,13 @@ import { initializeApp } from "firebase/app";
 import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyAJ5h3U6geJ_sab2sPT013xzDx_h4An-iI",
+  authDomain: "cater-5d36c.firebaseapp.com",
+  projectId: "cater-5d36c",
+  storageBucket: "cater-5d36c.firebasestorage.app",
+  messagingSenderId: "1315919509",
+  appId: "1:1315919509:web:e369c4b5d0c0710f68ad9c",
+  measurementId: "G-34QZQZTYME",
 };
 
 const app = initializeApp(firebaseConfig);

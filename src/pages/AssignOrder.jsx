@@ -7,7 +7,11 @@ import { AssignOrderSkeleton } from "../components/skeleton/AssginOrderSkeleton"
 import LoadingButton from "../components/LoadingButton";
 import EmptySection from "../components/EmptySection";
 
-const AssignOrder = ({ assignOrder, assignOrderIsLoading }) => {
+const AssignOrder = ({
+  assignOrder,
+  assignOrderIsLoading,
+  loadingDeliveryPersonId,
+}) => {
   const { assignOrderOpened } = useSelector((state) => state.order);
 
   const dispatch = useDispatch();
@@ -31,7 +35,10 @@ const AssignOrder = ({ assignOrder, assignOrderIsLoading }) => {
   );
 
   const assignOrderHandler = async (DID) => {
-    assignOrder(DID);
+    const match = delieveryEmp?.find((DEmp) => DEmp.id === DID);
+    if (match !== null) {
+      assignOrder(DID);
+    }
   };
 
   useEffect(() => {
@@ -81,7 +88,10 @@ const AssignOrder = ({ assignOrder, assignOrderIsLoading }) => {
                         btnClass={`basic-1/2 cursor-pointer  h-10 text-base `}
                         loadingText="Assigning..."
                         text="Assign Order"
-                        disabled={assignOrderIsLoading}
+                        disabled={
+                          assignOrderIsLoading &&
+                          loadingDeliveryPersonId === DEmp.id
+                        }
                         click={() => {
                           assignOrderHandler(DEmp.id, "assign");
                         }}

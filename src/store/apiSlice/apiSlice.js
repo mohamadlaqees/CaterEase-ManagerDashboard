@@ -1,20 +1,45 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { setEarnings } from "../dashboardSlice";
 
-export const apiSlice = createApi({
-  reducerPath: "api",
+const baseQuery = fetchBaseQuery({
+  baseUrl: "http://127.0.0.1:8000/api/",
+  prepareHeaders: (headers) => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    headers.set("Accept", "application/json");
+    return headers;
+  },
+});
 
-  baseQuery: fetchBaseQuery({
-    baseUrl: "http://127.0.0.1:8000/api/",
-    prepareHeaders: (header) => {
+const baseQueryWithDynamicHeaders = async (args, api, extraOptions) => {
+  const fcmToken = api.meta?.fcmToken;
+
+  if (fcmToken) {
+    const customPrepareHeaders = (headers) => {
       const token = localStorage.getItem("authToken");
       if (token) {
-        header.set("Authorization", `Bearer ${token}`);
+        headers.set("Authorization", `Bearer ${token}`);
       }
-      header.set("Accept", "application/json");
-      return header;
-    },
-  }),
+      headers.set("Accept", "application/json");
+      headers.set("X-FCM-Token", fcmToken);
+      return headers;
+    };
+
+    return fetchBaseQuery({
+      baseUrl: "http://127.0.0.1:8000/api/",
+      prepareHeaders: customPrepareHeaders,
+    })(args, api, extraOptions);
+  }
+
+  return baseQuery(args, api, extraOptions);
+};
+
+export const apiSlice = createApi({
+  reducerPath: "api",
+  baseQuery: baseQueryWithDynamicHeaders,
+
   tagTypes: [
     "Delivery",
     "category",
@@ -25,6 +50,7 @@ export const apiSlice = createApi({
     "allDelivery",
     "promo",
     "reviews",
+    "orders",
   ],
   endpoints: (build) => ({
     // Auth
@@ -356,7 +382,7 @@ export const apiSlice = createApi({
           ...data,
         },
       }),
-      invalidatesTags: ["order"],
+      invalidatesTags: ["order", "orders"],
     }),
     payCashPartial: build.mutation({
       query: ({ orderID, data }) => ({
@@ -366,7 +392,7 @@ export const apiSlice = createApi({
           ...data,
         },
       }),
-      invalidatesTags: ["order"],
+      invalidatesTags: ["order", "orders"],
     }),
 
     //Report
