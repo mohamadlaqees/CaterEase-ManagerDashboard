@@ -358,6 +358,9 @@ const OrderDetails = () => {
   if (deliveryPersonAcceptence) {
     currentStep = 7;
   }
+  if (deliveryPersonStatus === "delivered") {
+    currentStep = 8;
+  }
 
   return (
     <div className="relative">
@@ -611,48 +614,50 @@ const OrderDetails = () => {
                     </div>
                   </>
                 </div>
-                {!!is_approved && deliveryPersonAcceptence && (
-                  <div
-                    className={`transition-all opacity-100 translate-y-0 pointer-events-auto 2xl:w-[280px] w-full mt-10  border-2 border-(border-color)  rounded-md`}
-                  >
-                    <>
-                      <h1 className="p-4 border-b-2 border-(--border-color)">
-                        Delivery Details
-                      </h1>
-                      <img
-                        src="/van.png"
-                        alt=""
-                        className="w-30 h-20 mx-auto"
-                      />
-                      <div className="space-y-2">
-                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
-                          <h3 className="">Delivery employee :</h3>
-                          <p className="text-(--secondaryFont)">
-                            {deliveryEmpName}
-                          </p>
+                {!!is_approved &&
+                  deliveryPersonAcceptence &&
+                  deliveryPersonStatus === "delivered" && (
+                    <div
+                      className={`transition-all opacity-100 translate-y-0 pointer-events-auto 2xl:w-[280px] w-full mt-10  border-2 border-(border-color)  rounded-md`}
+                    >
+                      <>
+                        <h1 className="p-4 border-b-2 border-(--border-color)">
+                          Delivery Details
+                        </h1>
+                        <img
+                          src="/van.png"
+                          alt=""
+                          className="w-30 h-20 mx-auto"
+                        />
+                        <div className="space-y-2">
+                          <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
+                            <h3 className="">Delivery employee :</h3>
+                            <p className="text-(--secondaryFont)">
+                              {deliveryEmpName}
+                            </p>
+                          </div>
+                          <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
+                            <h3 className="">Phone :</h3>
+                            <p className="text-(--secondaryFont)">
+                              {deliveryEmpPhone}
+                            </p>
+                          </div>
+                          <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
+                            <h3 className="">Payment Mode :</h3>
+                            <p className="text-(--secondaryFont)">
+                              {payment.billStatus + " " + payment.paymentStatus}
+                            </p>
+                          </div>
+                          <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color) ">
+                            <h3 className="">Date :</h3>
+                            <p className="text-(--secondaryFont)">
+                              2025 / 9 / 15
+                            </p>
+                          </div>
                         </div>
-                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
-                          <h3 className="">Phone :</h3>
-                          <p className="text-(--secondaryFont)">
-                            {deliveryEmpPhone}
-                          </p>
-                        </div>
-                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color)">
-                          <h3 className="">Payment Mode :</h3>
-                          <p className="text-(--secondaryFont)">
-                            {payment.billStatus + " " + payment.paymentStatus}
-                          </p>
-                        </div>
-                        <div className="font-normal text-sm p-3 flex justify-between border-b-2 border-(--border-color) ">
-                          <h3 className="">Date :</h3>
-                          <p className="text-(--secondaryFont)">
-                            2025 / 9 / 15
-                          </p>
-                        </div>
-                      </div>
-                    </>
-                  </div>
-                )}
+                      </>
+                    </div>
+                  )}
                 <div className="flex-grow" />
                 {!!is_approved &&
                   payment.prepaymentRequired !== 0 &&
