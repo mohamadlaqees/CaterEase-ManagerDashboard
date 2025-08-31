@@ -7,7 +7,6 @@ export const addPackageSchema = z
     description: z.string().min(10, "Description is required."),
     photo: z.string().min(1, "A valid image is required."), // Changed from .url() to .min(1) as Base64 is not a standard URL.
 
-    branch_id: z.number({ required_error: "Branch is required." }),
     branch_service_type_ids: z
       .array(z.number())
       .min(1, "At least one service is required."),
@@ -110,7 +109,6 @@ export const editPackageSchema = z
     name: z.string().min(3, "Package name must be at least 3 characters long."),
     description: z.string().min(10, "Description is required."),
     photo: z.string().optional(),
-    branch_id: z.number({ required_error: "Branch is required." }),
     branch_service_type_ids: z
       .array(z.number())
       .min(1, "At least one service is required."),

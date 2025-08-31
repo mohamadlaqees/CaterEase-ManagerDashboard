@@ -23,13 +23,15 @@ import { Input } from "@/components/ui/input";
 import { toast, Toaster } from "sonner";
 
 // Icons
-import { User, Mail, Phone, Car, KeyRound } from "lucide-react";
+import { User, Mail, Phone, Car, KeyRound, ShieldCheck } from "lucide-react";
 
 import { deliveryEmpSchema } from "../validation/deliveryValidation";
 import { useAddDeliveryEmployeeMutation } from "../store/apiSlice/apiSlice";
 import LoadingButton from "../components/LoadingButton";
+import { useNavigate } from "react-router";
 
 const AddDeliveryEmployee = () => {
+  const navigate = useNavigate();
   const [addDeliveryEmployee, { isLoading }] = useAddDeliveryEmployeeMutation();
 
   const form = useForm({
@@ -40,6 +42,7 @@ const AddDeliveryEmployee = () => {
       phone: "",
       vehicleType: "",
       gender: undefined,
+      status: "active",
       password: "",
       isAvailable: true,
     },
@@ -47,12 +50,12 @@ const AddDeliveryEmployee = () => {
   });
 
   const onSubmit = async (data) => {
-    // Removed 'photo' from the transformed data
     const transformedData = {
       name: data.fullName,
       email: data.email,
       phone: data.phone,
       gender: data.gender === "male" ? "m" : "f",
+      status: data.status,
       password: data.password,
       vehicle_type: data.vehicleType,
       is_available: data.isAvailable,
@@ -67,6 +70,7 @@ const AddDeliveryEmployee = () => {
         },
       });
       form.reset();
+      navigate("/delivery");
     } catch (error) {
       const errorEntries = Object.entries(error.data.errors) || "";
       const message = errorEntries.map(([, value]) => value[0]);
@@ -104,12 +108,12 @@ const AddDeliveryEmployee = () => {
                       <FormItem>
                         <FormLabel>Full Name</FormLabel>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-(--primaryFont)" />
                           <FormControl>
                             <Input
                               placeholder="e.g., John Doe"
                               {...field}
-                              className="pl-10"
+                              className="pl-10 focus-visible:ring-(--primary) focus:border-0  placeholder-(--secondaryFont) text-(--secondaryFont)"
                             />
                           </FormControl>
                         </div>
@@ -123,13 +127,13 @@ const AddDeliveryEmployee = () => {
                       <FormItem>
                         <FormLabel>Email Address</FormLabel>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-(--primaryFont)" />
                           <FormControl>
                             <Input
                               type="email"
                               placeholder="e.g., john.doe@example.com"
                               {...field}
-                              className="pl-10"
+                              className="pl-10 focus-visible:ring-(--primary) focus:border-0  placeholder-(--secondaryFont) text-(--secondaryFont)"
                             />
                           </FormControl>
                         </div>
@@ -143,9 +147,14 @@ const AddDeliveryEmployee = () => {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-(--primaryFont)" />
                           <FormControl>
-                            <Input type="tel" {...field} className="pl-10" />
+                            <Input
+                              type="tel"
+                              {...field}
+                              className="pl-10 focus-visible:ring-(--primary) focus:border-0  placeholder-(--secondaryFont) text-(--secondaryFont)"
+                              placeholder="e.g., 599123456"
+                            />
                           </FormControl>
                         </div>
                         <FormMessage />
@@ -187,53 +196,84 @@ const AddDeliveryEmployee = () => {
                   />
                 </div>
 
-                {/* Vehicle & Password */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
                   <FormField
                     name="vehicleType"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Vehicle Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a vehicle" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="van">Van</SelectItem>
-                            <SelectItem value="sedan">Sedan</SelectItem>
-                            <SelectItem value="pickup">Pick Up</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="relative">
+                          <Car className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-(--primaryFont)" />
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="pl-10 focus-visible:ring-(--primary) focus:border-0 placeholder-(--secondaryFont) text-(--secondaryFont)">
+                                <SelectValue placeholder="Select a vehicle" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="text-(--secondaryFont)">
+                              <SelectItem value="van">Van</SelectItem>
+                              <SelectItem value="sedan">Sedan</SelectItem>
+                              <SelectItem value="pickup">Pick Up</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <FormField
-                    name="password"
+                    control={form.control}
+                    name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>Status</FormLabel>
                         <div className="relative">
-                          <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                          <FormControl>
-                            <Input
-                              type="password"
-                              placeholder="Must be 8+ characters"
-                              {...field}
-                              className="pl-10"
-                            />
-                          </FormControl>
+                          <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-(--primaryFont)" />
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="pl-10 focus-visible:ring-(--primary) focus:border-0 placeholder-(--secondaryFont) text-(--secondaryFont)">
+                                <SelectValue placeholder="Select a status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="text-(--secondaryFont)">
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="deleted">
+                                Not Active
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+                <FormField
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <div className="relative">
+                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-(--primaryFont)" />
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder="Must be 8+ characters"
+                            {...field}
+                            className="pl-10 focus-visible:ring-(--primary) focus:border-0  placeholder-(--secondaryFont) text-(--secondaryFont)"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {/* Availability Switch */}
                 <FormField
@@ -259,22 +299,24 @@ const AddDeliveryEmployee = () => {
               </div>
 
               {/* Form Footer */}
-              <div className="flex items-center justify-end gap-4 p-6 ">
+              <div className="flex items-center justify-end gap-4 p-6 bg-gray-50/50 border-t border-gray-200 rounded-b-xl">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => form.reset()}
+                  onClick={() => {
+                    form.reset();
+                  }}
                   className="text-(--secondaryFont) hover:text-(--primary) cursor-pointer "
                 >
                   Clear Form
                 </Button>
                 <LoadingButton
+                  btnClass={"cursor-pointer"}
                   disabled={isLoading}
                   isButton={true}
                   loadingText="Creating..."
                   text="Create Employee"
                   type="submit"
-                  btnClass={"cursor-pointer"}
                 />
               </div>
             </form>

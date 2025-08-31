@@ -128,7 +128,7 @@ const Delivery = () => {
           <div className="flex items-center text-sm text-center sm:text-base  sm:gap-2 font-medium">
             <NavLink
               to={"/delivery"}
-              className={`transition-all ${
+              className={`hover:text-(--primary) transition-all ${
                 !condition ? "text-(--primary)" : "text-(--primaryFont)"
               }`}
             >
@@ -138,7 +138,7 @@ const Delivery = () => {
             <NavLink
               to={"add-delivery-employee"}
               className={({ isActive }) =>
-                `transition-all ${
+                `hover:text-(--primary) transition-all ${
                   isActive ? "text-(--primary)" : "text-(--primaryFont)"
                 }`
               }
@@ -200,7 +200,7 @@ const Delivery = () => {
                       <SelectTrigger className="basis-1/2 min-w-[225px] w-full h-10!  focus-visible:ring-(--primary) focus:border-0 border-(--border-color) border-2  placeholder-(--secondaryFont) text-(--secondaryFont)">
                         <SelectValue placeholder="Availability" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="text-(--secondaryFont)">
                         <SelectGroup className="text-(--primaryFont)">
                           <SelectItem value="all">All</SelectItem>
                           <SelectItem value="available">Active</SelectItem>

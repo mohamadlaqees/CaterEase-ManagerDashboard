@@ -128,7 +128,12 @@ const CustomerDetails = () => {
           <header className="flex justify-between items-center  font-bold mb-5">
             <span className="text-sm sm:text-2xl ">Customer Details</span>
             <div className="flex items-center text-sm sm:text-base  sm:gap-2 font-medium">
-              <NavLink to={"/customers"}>Customers</NavLink>
+              <NavLink
+                to={"/customers"}
+                className={"hover:text-(--primary) transition-all"}
+              >
+                Customers
+              </NavLink>
               <ChevronRight size={20} />
               <NavLink
                 to={""}
@@ -244,7 +249,7 @@ const CustomerDetails = () => {
                   <SelectTrigger className=" focus-visible:ring-(--primary) focus:border-0 border-(--border-color) border-2 h-10 placeholder-(--secondaryFont) text-(--secondaryFont)">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="text-(--secondaryFont)">
                     <SelectGroup>
                       <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="delivered">Delivered</SelectItem>

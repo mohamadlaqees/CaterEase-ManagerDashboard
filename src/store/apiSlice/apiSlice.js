@@ -24,6 +24,7 @@ export const apiSlice = createApi({
     "order",
     "allDelivery",
     "promo",
+    "reviews",
   ],
   endpoints: (build) => ({
     // Auth
@@ -347,6 +348,26 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["allDelivery", "order"],
     }),
+    payCashFull: build.mutation({
+      query: ({ orderID, data }) => ({
+        url: `manager/orders/${orderID}/pay-cash`,
+        method: "POST",
+        body: {
+          ...data,
+        },
+      }),
+      invalidatesTags: ["order"],
+    }),
+    payCashPartial: build.mutation({
+      query: ({ orderID, data }) => ({
+        url: `manager/orders/${orderID}/pay-cash`,
+        method: "POST",
+        body: {
+          ...data,
+        },
+      }),
+      invalidatesTags: ["order"],
+    }),
 
     //Report
     report: build.mutation({
@@ -361,16 +382,31 @@ export const apiSlice = createApi({
 
     //reviews
     reviews: build.query({
-      query: () => "reviews/manage",
+      query: () => "complaints/manager",
+      providesTags: ["reviews"],
     }),
-    deliveryReviews: build.query({
-      query: () => "reviews/manage/DeliveryReviews",
+    reviewsStatistics: build.query({
+      query: () => `reviews/manage`,
     }),
     reviewsDateFilter: build.query({
-      query: (date) => `reviews/manage?date=${date}`,
+      query: (date) => `complaints/manager??date=${date}`,
     }),
-    deliveryReviewsDateFilter: build.query({
-      query: (date) => `reviews/manage/DeliveryReviews?date=${date}`,
+    changeReviewStatus: build.mutation({
+      query: ({ reviewID, status }) => ({
+        url: `complaints/${reviewID}/status/manager`,
+        method: "PUT",
+        body: {
+          status,
+        },
+      }),
+      invalidatesTags: ["reviews"],
+    }),
+    deleteReview: build.mutation({
+      query: (reviewID) => ({
+        url: `complaints/${reviewID}/manager`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["reviews"],
     }),
   }),
 });
@@ -416,10 +452,8 @@ export const {
   useOrderStatusSearchQuery,
   useOrderStatisticsQuery,
   useReviewsDateFilterQuery,
-  useDeliveryReviewsQuery,
   useLatestOrdersQuery,
   useFilterDeliveryOrdersQuery,
-  useDeliveryReviewsDateFilterQuery,
   useOnGoingOrdersQuery,
   useOrderQuery,
   useOrderDateSearchQuery,
@@ -427,4 +461,9 @@ export const {
   useRejectOrderMutation,
   useAllDeliveryEmpQuery,
   useAssignOrderMutation,
+  useChangeReviewStatusMutation,
+  useDeleteReviewMutation,
+  useReviewsStatisticsQuery,
+  usePayCashFullMutation,
+  usePayCashPartialMutation,
 } = apiSlice;

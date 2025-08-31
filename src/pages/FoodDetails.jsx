@@ -63,8 +63,8 @@ const FoodDetails = () => {
       amount: packageResponse?.prepayment_amount,
     },
     servicesNames: services,
-    rating: packageResponse.average_rating,
-    reviews: packageResponse.reviews_count,
+    rating: packageResponse?.average_rating,
+    reviews: packageResponse?.reviews_count,
   };
 
   // Destructure for cleaner JSX
@@ -105,7 +105,7 @@ const FoodDetails = () => {
           <NavLink
             to={`/menu/${category}`}
             end
-            className="hover:text-(--primary)"
+            className="hover:text-(--primary) transition-all"
           >
             {category?.split("-")[0]}
           </NavLink>
@@ -113,7 +113,7 @@ const FoodDetails = () => {
           <NavLink
             to={""}
             className={({ isActive }) =>
-              `transition-all ${
+              `hover:text-(--primary) transition-all ${
                 isActive ? "text-(--primary)" : "text-(--primaryFont)"
               }`
             }

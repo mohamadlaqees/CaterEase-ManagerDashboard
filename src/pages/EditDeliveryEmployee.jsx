@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -23,7 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { toast, Toaster } from "sonner";
-import { User, Mail, Phone, Car, KeyRound } from "lucide-react";
+import { User, Mail, Phone, Car, KeyRound, ShieldCheck } from "lucide-react";
 
 import {
   useDeliveryDetailsQuery,
@@ -33,8 +33,8 @@ import LoadingButton from "../components/LoadingButton";
 import { editDeliveryEmpSchema } from "../validation/deliveryValidation";
 
 const EditDeliveryEmployee = () => {
+  const navigate = useNavigate();
   const { deliveryEmployee } = useParams();
-  const [isAvailable, setIsAvailable] = useState(false);
 
   const { data: deliveryResponse } = useDeliveryDetailsQuery(deliveryEmployee);
   const [editDeliveryEmployee, { isLoading: isUpdating }] =
@@ -48,8 +48,9 @@ const EditDeliveryEmployee = () => {
       phone: "",
       vehicleType: "",
       gender: undefined,
+      status: "",
       password: "",
-      isAvailable: false, // This will be controlled by the isAvailable state
+      isAvailable: true,
     },
     mode: "onChange",
   });
@@ -61,25 +62,25 @@ const EditDeliveryEmployee = () => {
         fullName: person.name,
         phone: String(person.phone),
         gender: person.gender === "m" ? "male" : "female",
+        status: deliveryResponse.status ? "active" : "deleted",
         email: person.email,
         vehicleType: person.vehicle_type,
-        isAvailable: person.is_available,
+        isAvailable: person.is_available === 1,
         password: "",
       });
-      setIsAvailable(person.is_available);
     }
   }, [deliveryResponse, form]);
 
   const onSubmit = async (data) => {
-    // Removed 'photo' from the payload
+    console.log(data);
     const payload = {
       name: data.fullName,
       email: data.email,
       phone: data.phone,
       gender: data.gender === "male" ? "m" : "f",
+      status: data.status,
       vehicle_type: data.vehicleType,
-      is_available: data.isAvailable,
-      password: data.password,
+      is_available: data.isAvailable ? 1 : 0,
     };
 
     if (data.password && data.password.length > 0) {
@@ -110,7 +111,10 @@ const EditDeliveryEmployee = () => {
         <div className="max-w-3xl w-full mx-auto">
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(onSubmit)}
+              onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                console.log("FORM VALIDATION ERRORS:", errors);
+                console.log(form.getValues("vehicleType"));
+              })}
               className="bg-white border border-gray-200 rounded-xl shadow-sm"
             >
               <div className="p-6 border-b border-gray-200">
@@ -134,7 +138,10 @@ const EditDeliveryEmployee = () => {
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                           <FormControl>
-                            <Input {...field} className="pl-10" />
+                            <Input
+                              {...field}
+                              className="pl-10 focus-visible:ring-(--primary) focus:border-0  placeholder-(--secondaryFont) text-(--secondaryFont)"
+                            />
                           </FormControl>
                         </div>
                         <FormMessage />
@@ -149,7 +156,11 @@ const EditDeliveryEmployee = () => {
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                           <FormControl>
-                            <Input type="email" {...field} className="pl-10" />
+                            <Input
+                              type="email"
+                              {...field}
+                              className="pl-10 focus-visible:ring-(--primary) focus:border-0  placeholder-(--secondaryFont) text-(--secondaryFont)"
+                            />
                           </FormControl>
                         </div>
                         <FormMessage />
@@ -164,7 +175,11 @@ const EditDeliveryEmployee = () => {
                         <div className="relative">
                           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                           <FormControl>
-                            <Input type="tel" {...field} className="pl-10" />
+                            <Input
+                              type="tel"
+                              {...field}
+                              className="pl-10 focus-visible:ring-(--primary) focus:border-0  placeholder-(--secondaryFont) text-(--secondaryFont)"
+                            />
                           </FormControl>
                         </div>
                         <FormMessage />
@@ -206,62 +221,92 @@ const EditDeliveryEmployee = () => {
                   />
                 </div>
 
-                {/* Vehicle & Password */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
                   <FormField
                     name="vehicleType"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Vehicle Type</FormLabel>
-                        <FormControl>
+                        <div className="relative">
+                          <Car className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-(--primaryFont)" />
                           <Select
-                            key={field.value}
                             onValueChange={field.onChange}
                             value={field.value}
+                            key={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="pl-10 focus-visible:ring-(--primary) focus:border-0 placeholder-(--secondaryFont) text-(--secondaryFont)">
                                 <SelectValue placeholder="Select a vehicle" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent className="text-(--secondaryFont)">
                               <SelectItem value="van">Van</SelectItem>
                               <SelectItem value="sedan">Sedan</SelectItem>
                               <SelectItem value="pickup">Pick Up</SelectItem>
                             </SelectContent>
                           </Select>
-                        </FormControl>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <FormField
-                    name="password"
+                    control={form.control}
+                    name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>New Password (Optional)</FormLabel>
+                        <FormLabel>Status</FormLabel>
                         <div className="relative">
-                          <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                          <FormControl>
-                            <Input
-                              type="password"
-                              placeholder="Leave blank to keep current"
-                              {...field}
-                              className="pl-10"
-                            />
-                          </FormControl>
+                          <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-(--primaryFont)" />
+                          <Select
+                            key={field.value}
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="pl-10 focus-visible:ring-(--primary) focus:border-0 placeholder-(--secondaryFont) text-(--secondaryFont)">
+                                <SelectValue placeholder="Select a status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="text-(--secondaryFont)">
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="deleted">
+                                Not Active
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+                <FormField
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <div className="relative">
+                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-(--primaryFont)" />
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder="Must be 8+ characters"
+                            {...field}
+                            className="pl-10 focus-visible:ring-(--primary) focus:border-0  placeholder-(--secondaryFont) text-(--secondaryFont)"
+                          />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 {/* Availability Switch */}
                 <FormField
                   control={form.control}
                   name="isAvailable"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
                         <FormLabel>Is Available</FormLabel>
@@ -271,13 +316,9 @@ const EditDeliveryEmployee = () => {
                       </div>
                       <FormControl>
                         <Switch
-                          checked={isAvailable}
-                          onCheckedChange={(checked) => {
-                            setIsAvailable(checked);
-                            form.setValue("isAvailable", checked, {
-                              shouldValidate: true,
-                            });
-                          }}
+                          key={field.value}
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
                       </FormControl>
                     </FormItem>
@@ -291,7 +332,7 @@ const EditDeliveryEmployee = () => {
                   type="button"
                   variant="outline"
                   className="text-(--secondaryFont) hover:text-(--primary) cursor-pointer "
-                  onClick={() => form.reset()}
+                  onClick={() => navigate("/delivery")}
                 >
                   Cancel
                 </Button>

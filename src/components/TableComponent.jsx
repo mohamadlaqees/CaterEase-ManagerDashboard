@@ -45,6 +45,8 @@ const TableComponent = ({ tableHeader, tableBody, tableClass, isLoading }) => {
                         to={`${
                           body.category
                             ? `${body.category}/${body.id}`
+                            : body.direction
+                            ? `${body.direction}/${body.id}`
                             : `${body.id}`
                         }`}
                       >

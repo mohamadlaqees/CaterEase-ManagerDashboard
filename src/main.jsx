@@ -21,7 +21,6 @@ import CustomerDetails from "./pages/CustomerDetails.jsx";
 import OrderDetails from "./pages/OrderDetails.jsx";
 import AddDeliveryEmployee from "./pages/AddDeliveryEmployee.jsx";
 import DeliveryEmployeeDetails from "./pages/DeliveryEmployeeDetails.jsx";
-import DeliveryEmployeeReviews from "./pages/DeliveryEmployeeReviews.jsx";
 import EditDeliveryEmployee from "./pages/EditDeliveryEmployee.jsx";
 import ProtectRoute from "./components/protectRoute.jsx";
 
@@ -125,10 +124,6 @@ const routes = createBrowserRouter([
           {
             index: true,
             element: <Reviews />,
-          },
-          {
-            path: "delivery-employee-reviews",
-            element: <DeliveryEmployeeReviews />,
           },
         ],
       },

@@ -19,7 +19,6 @@ const LoadingButton = ({
       className={btnClass}
       disabled={disabled}
       onClick={click}
-      size="sm"
       variant={variant}
     >
       {disabled ? (

@@ -65,7 +65,9 @@ const tableHeader = [
             ? "text-[#22c55e] bg-[#e8f9ef]"
             : row.status === "cancelled"
             ? "text-[#ef4444] bg-[#fdecec]"
-            : row.status === "confirmed" || row.status === "pending"
+            : row.status === "confirmed"
+            ? "text-[#a47d06] bg-[#fdf7e6]"
+            : row.status === "pending"
             ? "text-[#eab308] bg-[#fdf7e6]"
             : row.status === "preparing"
             ? "text-[#3b82f6] bg-[#eef4ff]"
@@ -128,14 +130,17 @@ const Orders = () => {
       : [];
 
   const pending = onGoingOrdersResponse?.pending || [];
+  const confirmed = onGoingOrdersResponse?.confirmed || [];
   const preparing = onGoingOrdersResponse?.preparing || [];
   const delivered = onGoingOrdersResponse?.delivered || [];
 
   const transformedPending = orderDateSearchResponse?.data.pending || [];
+  const transformedConfirmed = orderDateSearchResponse?.data.confirmed || [];
   const transformedPreparing = orderDateSearchResponse?.data.preparing || [];
   const transformedDelivered = orderDateSearchResponse?.data.delivered || [];
 
   const pendingOrderMap = date ? transformedPending : pending;
+  const confirmedOrderMap = date ? transformedConfirmed : confirmed;
   const preparingOrderMap = date ? transformedPreparing : preparing;
   const deliveredOrderMap = date ? transformedDelivered : delivered;
 
@@ -146,6 +151,12 @@ const Orders = () => {
     };
   });
   const pendingOrdersInfo = pendingOrderMap?.map((order) => {
+    return {
+      id: order.id,
+      date: format(order?.created_at, "yyyy-MM-dd hh:mm a"),
+    };
+  });
+  const confirmedOrdersInfo = confirmedOrderMap?.map((order) => {
     return {
       id: order.id,
       date: format(order?.created_at, "yyyy-MM-dd hh:mm a"),
@@ -201,11 +212,12 @@ const Orders = () => {
                   <SelectTrigger className=" focus-visible:ring-(--primary) focus:border-0 border-(--border-color) border-2 h-10 placeholder-(--secondaryFont) text-(--secondaryFont)">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="text-(--secondaryFont)">
                     <SelectGroup>
                       <SelectItem value="all">All</SelectItem>
                       <SelectItem value="delivered">Delivered</SelectItem>
                       <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="confirmed">Confirmed</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="preparing">Preparing</SelectItem>
                     </SelectGroup>
@@ -234,11 +246,7 @@ const Orders = () => {
           </section>
           <section className="basis-1/2 ">
             <div
-              className={`p-8 w-full 2xl:basis-1/2 border-2 border-(--border-color) rounded-md max-h-[720px] overflow-hidden ${
-                pending.length > 0 && preparing.length > 0
-                  ? "hover:overflow-y-scroll"
-                  : ""
-              }  custom-scrollbar`}
+              className={`p-8 w-full 2xl:basis-1/2 border-2 border-(--border-color) rounded-md max-h-[720px] overflow-hidden ${"hover:overflow-y-scroll"}  custom-scrollbar`}
             >
               <div className="flex items-start justify-between flex-wrap 2xl:flex-nowrap">
                 <h1 className="mb-4 text-lg sm:text-xl font-bold ">
@@ -298,6 +306,48 @@ const Orders = () => {
                               <div>
                                 <div className="flex items-center gap-3">
                                   <h3>Pending order</h3>
+                                  <Eye
+                                    className="text-(--secondaryFont) mx-2 sm:mx-0 hover:brightness-50 cursor-pointer"
+                                    size={20}
+                                    onClick={() => navigate(`${order.id}`)}
+                                  />
+                                </div>
+                                <span className="text-sm">{order.id}</span>
+                              </div>
+                              <div className="text-(--secondaryFont) text-sm">
+                                {order.date}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <header className="my-4 font-bold">Confirmed</header>
+                    <div
+                      className={`p-3 border-2 border-(--border-color) rounded-md space-y-4 overflow-hidden overflow-x-auto  ${
+                        pending.length > 0 ? "hover:overflow-y-scroll" : ""
+                      } custom-scrollbar max-h-53`}
+                    >
+                      {confirmedOrdersInfo.length == 0 ? (
+                        <div className="flex flex-col items-center justify-center text-center text-gray-400 py-4">
+                          <XCircle className="w-8 h-8 mb-2" />
+                          <p className="font-medium">No packages</p>
+                        </div>
+                      ) : (
+                        confirmedOrdersInfo?.map((order) => (
+                          <div className="min-w-sm 2xl:min-w-fit hover:opacity-90 transition-all  bg-(--secondary) p-3 rounded-md flex items-center gap-5">
+                            <img
+                              src="/order.png"
+                              className="rounded-full w-20 h-15"
+                              alt=""
+                            />
+                            <div className="w-full flex justify-between">
+                              <div>
+                                <div className="flex items-center gap-3">
+                                  <h3>Confirmed order</h3>
                                   <Eye
                                     className="text-(--secondaryFont) mx-2 sm:mx-0 hover:brightness-50 cursor-pointer"
                                     size={20}

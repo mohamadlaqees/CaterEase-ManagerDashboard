@@ -73,6 +73,10 @@ const chartConfig = {
 
 const tableHeader = [
   {
+    name: "Id",
+    key: "id",
+  },
+  {
     name: "Order",
     key: "name",
     render: (row) => (
@@ -84,7 +88,6 @@ const tableHeader = [
         />
         <div>
           <div>{row.name}</div>
-          <div>{row.id}</div>
         </div>
       </div>
     ),
@@ -92,51 +95,6 @@ const tableHeader = [
   {
     name: "Total",
     key: "price",
-  },
-];
-
-const tableBody = [
-  {
-    id: "#C0E4F7",
-    name: "Italian Pizza",
-    price: "$359.69",
-    img: "./pizza.png",
-    rate: 5,
-  },
-  {
-    id: "#12939F",
-    name: "Veg Burger",
-    price: "$350.3",
-    img: "./burger.png",
-    rate: 5,
-  },
-  {
-    id: "#C0E4f7",
-    name: "Italian Pizza",
-    price: "$359.69",
-    img: "./pizza.png",
-    rate: 5,
-  },
-  {
-    id: "#C0E4f7",
-    name: "Italian Pizza",
-    price: "$359.69",
-    img: "./pizza.png",
-    rate: 5,
-  },
-  {
-    id: "#C0E4f7",
-    name: "Italian Pizza",
-    price: "$359.69",
-    img: "./pizza.png",
-    rate: 5,
-  },
-  {
-    id: "#C0E4f7",
-    name: "Italian Pizza",
-    price: "$359.69",
-    img: "./pizza.png",
-    rate: 5,
   },
 ];
 
@@ -170,9 +128,14 @@ const Dashboard = () => {
   const { data: ordersActivityResponse } = useOrdersActivityQuery(
     localStorage.getItem("branchID")
   );
-  const { data: latestOrdersResponse } = useLatestOrdersQuery();
+  const { data: latestOrdersResponse, isLoading } = useLatestOrdersQuery();
 
-  console.log(latestOrdersResponse);
+  const tableBody = latestOrdersResponse?.map((order) => ({
+    direction: "orders",
+    id: order.id,
+    name: "Order",
+    price: order?.total_price,
+  }));
 
   const popularFoodData = popularFoodResponse?.map((data) => ({
     browser: data?.name,
@@ -261,6 +224,7 @@ const Dashboard = () => {
           <h1 className="mb-4">Recent orders</h1>
           <div className="overflow-hidden  hover:overflow-y-scroll custom-scrollbar  max-h-56 transition-all  ">
             <TableComponent
+              isLoading={isLoading}
               tableBody={tableBody}
               tableHeader={tableHeader}
               tableClass={"min-w-[500px]"}

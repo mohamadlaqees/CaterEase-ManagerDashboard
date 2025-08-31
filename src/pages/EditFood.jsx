@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { NavLink, useParams } from "react-router";
+import { NavLink, useNavigate, useParams } from "react-router";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast, Toaster } from "sonner";
@@ -18,13 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { MultiSelect } from "../components/ui/MultiSelect";
 import LoadingButton from "../components/LoadingButton";
 import DiscountFormModal from "./AddDiscount";
@@ -61,6 +55,7 @@ import {
 import { openConfirmPopUp } from "../store/packageSlice";
 
 const EditFood = () => {
+  const navigate = useNavigate();
   const { category, food: packageId } = useParams();
   const [imagePreview, setImagePreview] = useState(null);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
@@ -92,12 +87,13 @@ const EditFood = () => {
         ? branchInfoResponse?.branch.description
         : "";
 
+    console.log(pkg);
+
     return {
       name: pkg.name || "",
       description: pkg.description || "",
       photo: pkg.photo || null,
       base_price: parseFloat(pkg.base_price) || 0,
-      branch_id: pkg.branch_id,
       branchName,
       category_ids: pkg.categories?.map((c) => c.id) || [],
       occasion_type_ids: pkg.occasion_types?.map((o) => o.id) || [],
@@ -109,9 +105,7 @@ const EditFood = () => {
       prepayment_amount: parseFloat(pkg.prepayment_amount) || 0,
       is_active: !!pkg.is_active,
       notes: pkg.notes || "",
-      branch_service_type_ids: pkg.branch_service_types?.map(
-        (s) => s.service_type_id
-      ),
+      branch_service_type_ids: pkg.branch_service_types?.map((s) => s.id),
       items:
         pkg.items?.map((item) => ({
           food_item_name: item.food_item_name,
@@ -131,17 +125,11 @@ const EditFood = () => {
   const mockOccasions =
     occasionResponse?.map((o) => ({ id: o.id, name: o.name })) || [];
   const mockServiceTypes =
-    branchServicesResponse?.service_types?.map(({ service_type }) => ({
-      id: service_type.id,
-      name: service_type.name,
+    branchServicesResponse?.service_types?.map((service) => ({
+      id: service.id,
+      name: service.service_type.name,
     })) || [];
-  const mockBranches = [
-    {
-      id: packageDetails?.branch_id,
-      name: packageDetails?.branchName,
-    },
-  ];
-
+  console.log(mockServiceTypes);
   const packagesDiscounts = packagesWithDiscount?.packages.find(
     (pkg) => pkg.id === +packageId
   )?.discounts;
@@ -152,9 +140,8 @@ const EditFood = () => {
     defaultValues: {
       name: "",
       description: "",
-      photo: null,
+      photo: "",
       base_price: 0,
-      branch_id: undefined,
       category_ids: [],
       occasion_type_ids: [],
       branch_service_type_ids: [],
@@ -265,6 +252,7 @@ const EditFood = () => {
   };
 
   const onSubmit = async (data) => {
+    console.log(data);
     try {
       const response = await updatePackage({ id: packageId, ...data }).unwrap();
       toast.success(response.message, {
@@ -345,7 +333,9 @@ const EditFood = () => {
           </span>
           <div className="flex items-center gap-2 font-medium text-sm">
             <NavLink
-              className={"text-(--primaryFont)"}
+              className={
+                "text-(--primaryFont) hover:text-(--primary) transition-all"
+              }
               to={`/menu/${category}`}
               end
             >
@@ -705,37 +695,7 @@ const EditFood = () => {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      name="branch_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-(--primaryFont)">
-                            Branch
-                          </FormLabel>
-                          <Select
-                            key={field.value}
-                            value={field.value ? field.value.toString() : ""}
-                            onValueChange={(val) =>
-                              field.onChange(parseInt(val))
-                            }
-                          >
-                            <FormControl>
-                              <SelectTrigger className="text-(--secondaryFont) focus-visible:ring-(--primary)">
-                                <SelectValue placeholder="Select a branch" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {mockBranches.map((b) => (
-                                <SelectItem key={b.id} value={b.id.toString()}>
-                                  {b.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+
                     <FormField
                       name="branch_service_type_ids"
                       render={({ field }) => (
@@ -919,9 +879,9 @@ const EditFood = () => {
                 type="button"
                 variant="outline"
                 className="text-(--secondaryFont) hover:text-(--primary) cursor-pointer "
-                onClick={() => form.reset(packageDetails)}
+                onClick={() => navigate(`/menu/${category}`)}
               >
-                <Undo2 className="mr-2 h-4 w-4" /> Reset Changes
+                <Undo2 className="mr-2 h-4 w-4" /> Cancel
               </Button>
               <LoadingButton
                 isButton={true}

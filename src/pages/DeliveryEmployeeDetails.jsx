@@ -191,6 +191,7 @@ const DeliveryEmployeeDetails = () => {
             </span>
             <div className="flex items-center text-sm text-center sm:text-base  sm:gap-2 font-medium">
               <NavLink
+                className={"hover:text-(--primary) transition-all"}
                 to={
                   condition ? `/delivery/${deliveryEmployeeName}` : "/delivery"
                 }
@@ -201,7 +202,7 @@ const DeliveryEmployeeDetails = () => {
               <NavLink
                 to={condition ? "edit-delivery-employee" : "/delivery"}
                 className={({ isActive }) =>
-                  `transition-all ${
+                  `hover:text-(--primary) transition-all ${
                     isActive ? "text-(--primary)" : "text-(--primaryFont)"
                   }`
                 }
@@ -236,13 +237,7 @@ const DeliveryEmployeeDetails = () => {
                   {/* User Info & Reviews */}
                   <div className="flex flex-col items-center sm:items-start gap-2">
                     <div className=" items-center gap-2">
-                      <div className="flex text-yellow-400">
-                        {renderStars(5)}
-                      </div>
                       <div className="flex gap-1.5">
-                        <span className="font-semibold text-(--primaryFont)">
-                          5.0
-                        </span>
                         <span className="text-(--secondaryFont)">
                           {userInfo.reviews_count} reviews
                         </span>
@@ -385,7 +380,7 @@ const DeliveryEmployeeDetails = () => {
                     <SelectTrigger className=" focus-visible:ring-(--primary) focus:border-0 border-(--border-color) border-2 h-10 placeholder-(--secondaryFont) text-(--secondaryFont)">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="text-(--secondaryFont)">
                       <SelectGroup>
                         <SelectItem value="all">All Statuses</SelectItem>
                         <SelectItem value="delivered">Delivered</SelectItem>

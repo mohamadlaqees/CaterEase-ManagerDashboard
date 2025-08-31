@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { NavLink } from "react-router"; // Corrected import
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast, Toaster } from "sonner";
-import { useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,13 +17,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { MultiSelect } from "../components/ui/MultiSelect";
 
 import {
@@ -48,17 +40,12 @@ import {
 
 const AddPackage = () => {
   const [imagePreview, setImagePreview] = useState(null);
-  const { branchInfo } = useSelector((state) => state.restaurant);
-  const mockBranches = [
-    {
-      id: localStorage.getItem("branchID"),
-      name: branchInfo?.branch?.description,
-    },
-  ];
   const [addPackage, { isLoading }] = useAddpackageMutation();
   const { data: categoriesResponse } = useCategoriesQuery();
   const { data: occasionResponse } = useGetOccasionQuery();
   const { data: branchServicesResponse } = useBranchServicesQuery();
+  console.log(occasionResponse);
+  console.log(categoriesResponse);
 
   const mockCategories =
     categoriesResponse?.map((category) => ({
@@ -75,7 +62,7 @@ const AddPackage = () => {
   const mockServiceTypes = branchServicesResponse?.service_types?.map(
     (service) => {
       return {
-        id: service.service_type.id,
+        id: service.id,
         name: service.service_type.name,
       };
     }
@@ -87,7 +74,6 @@ const AddPackage = () => {
       name: "",
       description: "",
       photo: "",
-      branch_id: undefined,
       branch_service_type_ids: [],
       category_ids: [],
       occasion_type_ids: [],
@@ -141,7 +127,7 @@ const AddPackage = () => {
 
   const removeImage = () => {
     setImagePreview(null);
-    form.setValue("photo", "", { shouldValidate: true });
+    form.setValue("photo", "");
   };
 
   const onSubmit = async (data) => {
@@ -175,7 +161,7 @@ const AddPackage = () => {
             <div className="flex items-center gap-2 text-sm sm:text-base font-medium ">
               <NavLink
                 to="/menu"
-                className="text-(--secondaryFont) text-base hover:text-(--primaryFont)"
+                className="text-(--secondaryFont) text-base hover:text-(--primary) transition-all"
               >
                 menu
               </NavLink>
@@ -503,6 +489,7 @@ const AddPackage = () => {
                               Occasions
                             </FormLabel>
                             <MultiSelect
+                              key={field.value}
                               options={mockOccasions}
                               selected={field.value}
                               onChange={field.onChange}
@@ -513,39 +500,7 @@ const AddPackage = () => {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        name="branch_id"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-(--primaryFont)">
-                              Branch
-                            </FormLabel>
-                            <Select
-                              value={field.value ? field.value.toString() : ""}
-                              onValueChange={(val) =>
-                                field.onChange(parseInt(val))
-                              }
-                            >
-                              <FormControl>
-                                <SelectTrigger className="text-(--secondaryFont) focus-visible:ring-(--primary) focus:border-0">
-                                  <SelectValue placeholder="Select a branch" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {mockBranches.map((b) => (
-                                  <SelectItem
-                                    key={b.id}
-                                    value={b.id.toString()}
-                                  >
-                                    {b.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+
                       <FormField
                         name="branch_service_type_ids"
                         render={({ field }) => (

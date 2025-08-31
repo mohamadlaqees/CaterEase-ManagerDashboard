@@ -159,7 +159,7 @@ const Customers = () => {
                   <SelectTrigger className="basis-1/2 min-w-[225px] w-full h-10! focus-visible:ring-(--primary) focus:border-0 border-(--border-color) border-2  placeholder-(--secondaryFont) text-(--secondaryFont)">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="text-(--secondaryFont)">
                     <SelectGroup className="text-(--primaryFont)">
                       <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="active">Active</SelectItem>

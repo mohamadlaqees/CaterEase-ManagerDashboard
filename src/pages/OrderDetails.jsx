@@ -10,6 +10,8 @@ import {
   useAcceptOrderMutation,
   useAssignOrderMutation,
   useOrderQuery,
+  usePayCashFullMutation,
+  usePayCashPartialMutation,
   useRejectOrderMutation,
 } from "../store/apiSlice/apiSlice";
 import { OrderDetailsSkeleton } from "../components/skeleton/OrderDetailsSkeleton";
@@ -18,12 +20,31 @@ import { toast, Toaster } from "sonner";
 import LoadingButton from "../components/LoadingButton";
 import { openConfirmPopUp } from "../store/menuSlice";
 import ConfirmPopUp from "../components/ConfirmPopUp";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { paySchema } from "../validation/orderValidation";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+
+import { Input } from "@/components/ui/input";
 
 const steps = [
   { id: 1, label: "Order received" },
-  { id: 2, label: "Processing" },
-  { id: 3, label: "On the way" },
-  { id: 4, label: "Delivered" },
+  { id: 2, label: "Order confirmed" },
+  { id: 3, label: "Order paid" },
+  { id: 4, label: "Preparing" },
+  { id: 5, label: "Waiting delivery acceptence" },
+  { id: 6, label: "Assigned to dlivery" },
+  { id: 7, label: "On the way" },
+  { id: 8, label: "Delivered" },
 ];
 const tableHeader = [
   {
@@ -63,6 +84,7 @@ const OrderDetails = () => {
   const { orderID } = useParams();
   const { confirmPopUpOpened } = useSelector((state) => state.menu);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+
   const dispatch = useDispatch();
   const { data: orderResponse, isLoading } = useOrderQuery(orderID);
   const [acceptOrder, { isLoading: acceptOrderIsLoading }] =
@@ -73,10 +95,25 @@ const OrderDetails = () => {
     useAssignOrderMutation(undefined, {
       skip: !assignOrderOpened,
     });
+  const [payFull, { isLoading: payCashFullIsLoading }] =
+    usePayCashFullMutation();
+  const [payPartial, { isLoading: payCashPartialIsLoading }] =
+    usePayCashPartialMutation();
+
+  const form = useForm({
+    resolver: zodResolver(paySchema),
+    defaultValues: {
+      amount: "",
+      paymentType: "partial",
+    },
+  });
+  const paymentType = form.watch("paymentType");
 
   const orderid = orderResponse?.order.id;
   const deliveryInfo = {
-    delivery_person_id: orderResponse?.order.delivery_info?.delivery_person_id,
+    deliveryPersonStatus: orderResponse?.order.delivery_info?.status,
+    deliveryPersonAcceptence:
+      orderResponse?.order.delivery_info?.acceptance_status,
   };
   const customerInfo = {
     name: orderResponse?.order.customer.name,
@@ -95,7 +132,20 @@ const OrderDetails = () => {
     totalPrice: orderResponse?.order?.payment.totalPriceWithDelivery,
     deliveryPrice: orderResponse?.order?.payment.deliveryPrice,
     orderPrice: orderResponse?.order?.payment.orderPrice,
+    prepaymentRequired: orderResponse?.order.details.reduce(
+      (acc, curr) => acc + parseFloat(curr.prepayment_amount),
+      0
+    ),
+    billStatus: orderResponse?.order?.payment?.bill_info?.status,
+    paymentStatus:
+      orderResponse?.order?.payment?.bill_info?.payments?.[0]?.payment_method,
+    paymentAmount:
+      orderResponse?.order?.payment?.bill_info?.payments?.[0]?.amount,
+    remainingAmount:
+      orderResponse?.order?.payment?.bill_info?.payment_progress
+        ?.remaining_amount,
   };
+
   const addressInfo = {
     city: customerInfo.address?.city,
     street: customerInfo.address?.street,
@@ -103,7 +153,6 @@ const OrderDetails = () => {
     floor: customerInfo.address?.floor,
     apartment: customerInfo.address?.apartment,
   };
-
   const packages = orderResponse?.order?.details;
   const {
     name,
@@ -116,12 +165,8 @@ const OrderDetails = () => {
     approved_at,
   } = customerInfo;
   const { city, street, building, floor, apartment } = addressInfo;
-  const { delivery_person_id } = deliveryInfo;
-  const [currentStep, setCurrentStep] = useState(
-    is_approved ? 2 : deliveryInfo !== null ? 3 : true ? 4 : 1
-  );
-
-  console.log(currentStep);
+  const { deliveryPersonAcceptence, deliveryPersonStatus } = deliveryInfo;
+  // const [currentStep, setCurrentStep] = useState(1);
 
   const tableBody = packages?.map((pkg) => {
     return {
@@ -159,7 +204,6 @@ const OrderDetails = () => {
         },
       });
     } catch (error) {
-      console.log(error);
       toast.error(error?.data?.message, {
         style: {
           background: "white",
@@ -190,7 +234,6 @@ const OrderDetails = () => {
       });
       dispatch(openConfirmPopUp(false));
     } catch (error) {
-      console.log(error);
       toast.error(error?.data?.message, {
         style: {
           background: "white",
@@ -226,6 +269,90 @@ const OrderDetails = () => {
     }
   };
 
+  const payPartialHandler = async (data) => {
+    try {
+      const response = await payPartial({
+        orderID,
+        data: {
+          amount: data.amount,
+          payment_type: "partial",
+        },
+      }).unwrap();
+      toast.success(response.message, {
+        style: {
+          background: "white",
+          color: "#314E76",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
+      currentStep = 3;
+    } catch (error) {
+      toast.error(error?.data?.message, {
+        style: {
+          background: "white",
+          color: "#ef4444",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
+    }
+  };
+
+  const payFullHandler = async () => {
+    try {
+      const response = await payFull({
+        orderID,
+        data: {
+          payment_type: "full",
+          amount: totalPrice,
+        },
+      }).unwrap();
+      toast.success(response.message, {
+        style: {
+          background: "white",
+          color: "#314E76",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
+      currentStep = 3;
+    } catch (error) {
+      toast.error(error?.data?.message, {
+        style: {
+          background: "white",
+          color: "#ef4444",
+          border: "1px solid hsl(var(--border))",
+        },
+      });
+    }
+  };
+
+  const onSubmit = (data) => {
+    if (data.paymentType === "partial") {
+      payPartialHandler(data);
+    } else if (data.paymentType === "full") {
+      payFullHandler();
+    }
+  };
+
+  let currentStep = 1; // Start with the default step
+
+  if (is_approved === 1) {
+    currentStep = 2; // If the order is confirmed, it's at least step 2
+  }
+
+  if (
+    payment.billStatus === "paid" ||
+    payment.billStatus === "partially_paid"
+  ) {
+    currentStep = 4;
+  }
+
+  if (deliveryPersonStatus === "assigned") {
+    currentStep = 5;
+  }
+  if (deliveryPersonAcceptence === "picked_up") {
+    currentStep = 6;
+  }
+
   return (
     <div className="relative">
       {confirmPopUpOpened && (
@@ -238,16 +365,23 @@ const OrderDetails = () => {
         />
       )}
       <Toaster position="top-center" richColors />
-      <AssignOrder
-        orderID={+orderID}
-        assignOrder={assignOrderHandler}
-        assignOrderIsLoading={assignOrderIsLoading}
-      />
+      {deliveryPersonStatus !== "assignrd" && (
+        <AssignOrder
+          orderID={+orderID}
+          assignOrder={assignOrderHandler}
+          assignOrderIsLoading={assignOrderIsLoading}
+        />
+      )}
       <main className=" text-(--primaryFont) py-10 px-3 sm:p-10 ">
         <header className="flex justify-between items-center  font-bold mb-5">
           <span className="text-sm sm:text-2xl ">Order Details</span>
           <div className="flex items-center text-sm sm:text-base  sm:gap-2 font-medium">
-            <NavLink to={"/orders"}>Orders</NavLink>
+            <NavLink
+              to={"/orders"}
+              className={"hover:text-(--primary) transition-all"}
+            >
+              Orders
+            </NavLink>
             <ChevronRight size={20} />
             <NavLink
               to={""}
@@ -327,9 +461,48 @@ const OrderDetails = () => {
                           {deliveryPrice || "-"}
                         </p>
                       </div>
-                      <div className="p-3 flex justify-between ">
+                      <div className="p-3 flex justify-between  border-b-2 border-(--border-color)">
                         <h3>Total :</h3>
                         <p className="text-(--secondaryFont)">{totalPrice}</p>
+                      </div>
+                      <div className="max-h-[144px] overflow-hidden space-y-4 hover:overflow-y-scroll custom-scrollbar">
+                        <div className="px-3 flex justify-between ">
+                          <h3 className="text-(--priamty) font-bold">
+                            Payments :
+                          </h3>
+                        </div>
+                        <div className="px-3 flex justify-between ">
+                          <h3 className="text-(--priamty)">
+                            Payment status :{" "}
+                            <span className="text-(--secondaryFont)">
+                              {payment.billStatus || "-"}
+                            </span>
+                          </h3>
+                        </div>
+                        <div className="px-3 flex justify-between ">
+                          <h3 className="text-(--priamty)">
+                            Payment method :{" "}
+                            <span className="text-(--secondaryFont)">
+                              {payment.paymentStatus || "-"}
+                            </span>
+                          </h3>
+                        </div>
+                        <div className="px-3 flex justify-between ">
+                          <h3 className="text-(--priamty)">
+                            Amount :{" "}
+                            <span className="text-(--secondaryFont)">
+                              {payment.paymentAmount || "-"}
+                            </span>
+                          </h3>
+                        </div>
+                        <div className="px-3 flex justify-between ">
+                          <h3 className="text-(--priamty)">
+                            Remianing amount :{" "}
+                            <span className="text-(--secondaryFont)">
+                              {+payment.remainingAmount || "-"}
+                            </span>
+                          </h3>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -382,6 +555,11 @@ const OrderDetails = () => {
                         <span className="text-sm mt-2 text-center text-gray-700">
                           {step.label}
                         </span>
+                        {step.id === 3 && payment.paymentStatus && (
+                          <span className="text-(--primary) font-bold">
+                            {payment.paymentStatus}
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -401,7 +579,7 @@ const OrderDetails = () => {
               >
                 <div
                   className={`transition-all ${
-                    is_approved && !delivery_person_id
+                    !!is_approved && !deliveryPersonStatus
                       ? "opacity-100 translate-y-0 pointer-events-auto"
                       : "hidden translate-y-full pointer-events-none"
                   } 
@@ -415,7 +593,7 @@ const OrderDetails = () => {
                         className={` w-full cursor-pointer  h-10 text-base `}
                         onClick={() => {
                           dispatch(openAssignOrder(true));
-                          setCurrentStep(3);
+                          currentStep = 3;
                         }}
                       >
                         Manage Delivery{" "}
@@ -423,7 +601,7 @@ const OrderDetails = () => {
                     </div>
                   </>
                 </div>
-                {is_approved === 1 && delivery_person_id && (
+                {!!is_approved && deliveryPersonAcceptence && (
                   <div
                     className={`transition-all opacity-100 translate-y-0 pointer-events-auto 2xl:w-[280px] w-full mt-10  border-2 border-(border-color)  rounded-md`}
                   >
@@ -478,18 +656,131 @@ const OrderDetails = () => {
                   </div>
                 )}
                 <div className="flex-grow" />
-                <div className="flex  flex-col text-sm  sm:text-base  items-center sm:flex-row   gap-10 ">
-                  {is_approved === 1 && !delivery_person_id && (
-                    <Button
-                      onClick={openPopUpHandler}
-                      type="button"
-                      variant="outline"
-                      className={`w-full 2xl:w-60 m-0 2xl:m-auto  bg-[#fdecec] hover:bg-[#ef4444] hover:text-white text-[#ef4444] h-10 text-base cursor-pointer`}
-                    >
-                      Reject
-                    </Button>
+                {!!is_approved &&
+                  payment.prepaymentRequired !== 0 &&
+                  payment.billStatus === "unpaid" && (
+                    <Form {...form}>
+                      <form
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="w-full space-y-6"
+                      >
+                        {/* --- NEW: RadioGroup using FormField --- */}
+                        <FormField
+                          control={form.control}
+                          name="paymentType"
+                          render={({ field }) => (
+                            <FormItem className="space-y-3">
+                              <FormLabel className="text-(--primaryFont) font-medium">
+                                Payment Option
+                              </FormLabel>
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  className="flex items-center space-x-4"
+                                >
+                                  <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                      <RadioGroupItem value="partial" id="r1" />
+                                    </FormControl>
+                                    <Label
+                                      htmlFor="r1"
+                                      className="font-normal text-(--secondaryFont)"
+                                    >
+                                      Partial Pay
+                                    </Label>
+                                  </FormItem>
+                                  <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                      <RadioGroupItem value="full" id="r2" />
+                                    </FormControl>
+                                    <Label
+                                      htmlFor="r2"
+                                      className="font-normal text-(--secondaryFont)"
+                                    >
+                                      Full Pay
+                                    </Label>
+                                  </FormItem>
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {paymentType === "partial" ? (
+                          <>
+                            {/* Amount Field (conditionally editable) */}
+                            <FormField
+                              control={form.control}
+                              name="amount"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-(--primaryFont)">
+                                    Paying Amount
+                                  </FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      placeholder={`Enter ${payment.prepaymentRequired} amount`}
+                                      {...field}
+                                      onChange={(e) => {
+                                        const value = e.target.value;
+                                        field.onChange(
+                                          value === "" ? "" : Number(value)
+                                        );
+                                      }}
+                                      // --- DYNAMIC BEHAVIOR ---
+                                      disabled={payCashPartialIsLoading}
+                                      className={`focus-visible:ring-(--primary) focus:border-0 border-(--border-color) border-2 h-10 placeholder-(--secondaryFont) text-(--secondaryFont) `}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            {/* Submit Button */}
+                            <LoadingButton
+                              isButton={true}
+                              btnClass="w-full mt-4 cursor-pointer h-10 text-base"
+                              type="submit"
+                              loadingText="Processing..."
+                              text={"Pay Partial Amount"}
+                              disabled={payCashPartialIsLoading}
+                              loading={payCashPartialIsLoading}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            {/* Submit Button */}
+                            <LoadingButton
+                              isButton={true}
+                              btnClass="w-full mt-4 cursor-pointer h-10 text-base"
+                              type="submit"
+                              loadingText="Processing..."
+                              text={"Pay Full Amount"}
+                              disabled={payCashFullIsLoading}
+                              loading={payCashFullIsLoading}
+                            />
+                          </>
+                        )}
+                      </form>
+                    </Form>
                   )}
-                  {is_approved === 0 && (
+                <div className="flex  flex-col text-sm  sm:text-base  items-center sm:flex-row   gap-10 ">
+                  {!!is_approved &&
+                    deliveryPersonStatus !== "assigned" &&
+                    payment.billStatus === "unpaid" && (
+                      <Button
+                        onClick={openPopUpHandler}
+                        type="button"
+                        variant="outline"
+                        className={`w-full 2xl:w-60 m-0 2xl:m-auto  bg-[#fdecec] hover:bg-[#ef4444] hover:text-white text-[#ef4444] h-10 text-base cursor-pointer`}
+                      >
+                        Reject
+                      </Button>
+                    )}
+                  {!is_approved && (
                     <LoadingButton
                       isButton={true}
                       btnClass={`w-full 2xl:w-60 m-0 2xl:m-auto cursor-pointer  h-10 text-base `}
@@ -499,9 +790,8 @@ const OrderDetails = () => {
                       text="Accept Order"
                       disabled={acceptOrderIsLoading}
                       click={() => {
-                        dispatch(openDelivery(true)),
-                          setCurrentStep(2),
-                          accepthandler();
+                        dispatch(openDelivery(true)), (currentStep = 2);
+                        accepthandler();
                       }}
                     />
                   )}

@@ -7,6 +7,7 @@ import deliverySlice from "./deliverySlice";
 import dashboardSlice from "./dashboardSlice";
 import restaurantSlice from "./restaurantSlice";
 import packageSlice from "./packageSlice";
+import reviewSlice from "./reviewSlice";
 import { apiSlice } from "./apiSlice/apiSlice";
 import { setupListeners } from "@reduxjs/toolkit/query";
 
@@ -20,6 +21,7 @@ const store = configureStore({
     dash: dashboardSlice,
     restaurant: restaurantSlice,
     package: packageSlice,
+    review: reviewSlice,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>

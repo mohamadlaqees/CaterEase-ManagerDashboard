@@ -177,7 +177,11 @@ const Category = () => {
         <header className="flex justify-between items-center   font-bold mb-5">
           <span className="text-xl sm:text-2xl ">{categoryName}</span>
           <div className="flex gap-2 font-medium">
-            <NavLink to={"/menu"} end>
+            <NavLink
+              to={"/menu"}
+              className={" hover:text-(--primary) transition-all"}
+              end
+            >
               Menu
             </NavLink>
             <ChevronRight size={20} />
