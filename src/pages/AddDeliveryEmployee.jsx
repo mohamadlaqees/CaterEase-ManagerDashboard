@@ -61,7 +61,13 @@ const AddDeliveryEmployee = () => {
       is_available: data.isAvailable,
     };
     try {
-      await addDeliveryEmployee(transformedData).unwrap();
+      const response = await addDeliveryEmployee(transformedData).unwrap();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Response(
+          errorData.message || "Failed to Add delivery employee."
+        );
+      }
       toast.success("Delivery Employee created successfully!", {
         style: {
           background: "white",

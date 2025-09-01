@@ -65,6 +65,7 @@ const CustomerDetails = () => {
     data: customerDetailsResponse,
     isLoading,
     refetch,
+    error,
   } = useCustomerDetailsQuery(name, {
     skip: status !== undefined,
   });
@@ -72,12 +73,16 @@ const CustomerDetails = () => {
     data: customerOrdersResponse,
     isError,
     isFetching,
+    error: customerOrdersError,
   } = useCustomerOrdersQuery(
     { customerID: name, orderStatus: status },
     {
       skip: status === undefined || status === "all",
     }
   );
+  if (customerOrdersError) {
+    throw new Response(error || "not found.");
+  }
   const dispatch = useDispatch();
   const { couponOpened, couponsListOpened } = useSelector(
     (state) => state.customers

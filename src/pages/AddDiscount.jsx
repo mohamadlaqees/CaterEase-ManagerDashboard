@@ -83,7 +83,10 @@ const DiscountFormModal = ({
       response = await addDiscount({
         ...payload,
       }).unwrap();
-      console.log(response);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Response(errorData.message || "Failed to add discount.");
+      }
       toast.success(response.message, {
         style: {
           background: "white",

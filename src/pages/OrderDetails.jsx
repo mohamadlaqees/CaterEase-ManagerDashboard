@@ -606,7 +606,6 @@ const OrderDetails = () => {
                         className={` w-full cursor-pointer  h-10 text-base `}
                         onClick={() => {
                           dispatch(openAssignOrder(true));
-                          currentStep = 3;
                         }}
                       >
                         Manage Delivery{" "}
@@ -793,7 +792,7 @@ const OrderDetails = () => {
                       text="Accept Order"
                       disabled={acceptOrderIsLoading}
                       click={() => {
-                        dispatch(openDelivery(true)), (currentStep = 2);
+                        dispatch(openDelivery(true));
                         accepthandler();
                       }}
                     />

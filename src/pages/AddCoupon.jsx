@@ -43,6 +43,7 @@ const AddCoupon = ({ customerID }) => {
         expiration_date: format(data.endDate, "yyyy-MM-dd"),
         user_id: customerID,
       }).unwrap();
+
       if (couponResponse?.message === "تم إنشاء الكوبون بنجاح") {
         dispatch(openCoupon(false));
         form.reset();

@@ -24,6 +24,7 @@ import DeliveryEmployeeDetails from "./pages/DeliveryEmployeeDetails.jsx";
 import EditDeliveryEmployee from "./pages/EditDeliveryEmployee.jsx";
 import ProtectRoute from "./components/protectRoute.jsx";
 import "./firebase";
+import NotFoundPage from "./pages/not-found.jsx";
 
 const routes = createBrowserRouter([
   {
@@ -133,6 +134,10 @@ const routes = createBrowserRouter([
         element: <SendReports />,
       },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);
 
