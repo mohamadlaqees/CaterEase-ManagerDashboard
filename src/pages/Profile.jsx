@@ -13,7 +13,7 @@ const Profile = () => {
     managerName: branchInfo?.branch?.manager_name,
     workingDays: branchInfo?.branch?.working_days,
     categories: branchInfo?.branch?.categories,
-    deliveryRegions: branchInfo?.branch?.delivery_areas,
+    deliveryRegions: branchInfo?.branch?.delivery_areas, // The raw data
     services: branchInfo?.branch?.service_types,
     occasions: branchInfo?.branch?.occasion_types,
   };
@@ -27,16 +27,29 @@ const Profile = () => {
     managerName: restaurantManagerName,
     workingDays: restaurantWorkingDays,
     categories: restaurantCategories,
-    deliveryRegions: restaurantDeliveryRegions,
+    deliveryRegions: restaurantDeliveryRegions, // This is the array with potential duplicates
     services: restaurantServices,
     occasions: restaurantOccasions,
   } = restaurantInfo;
+
+  // --- NEW: Logic to process and de-duplicate delivery regions ---
+
+  // 1. Map the raw data to formatted strings (e.g., "Damascus, Syria")
+  const formattedRegions =
+    restaurantDeliveryRegions?.map(
+      (area) => `${area.city_name}, ${area.country}`
+    ) || []; // Default to an empty array if data is not yet available
+
+  // 2. Use a Set to get only the unique strings, then convert it back to an array
+  const uniqueFormattedRegions = [...new Set(formattedRegions)];
+
+  // --- End of new logic ---
 
   return (
     <main className="text-(--primaryFont) p-10">
       {/* Page Header */}
       <header className="text-xl sm:text-2xl font-bold mb-5">
-        {restaurantName}
+        {restaurantName || "Your Restaurant"}
       </header>
 
       {/* Profile Banner */}
@@ -49,7 +62,7 @@ const Profile = () => {
         <div className="sm:flex gap-3 absolute sm:static left-1/2 -translate-x-1/2 sm:left-0 sm:translate-0">
           <img
             className="rounded-full m-auto sm:m-0 relative bottom-10 w-30 h-30 sm:left-0 sm:w-40 sm:h-40"
-            src={restaurantPhoto}
+            src={restaurantPhoto || "/default-logo.png"} // Fallback image
             alt="Restaurant"
           />
           <div className="sm:mt-8 text-center font-bold">
@@ -121,38 +134,36 @@ const Profile = () => {
             {restaurantCategories?.map((category) => (
               <li
                 key={category}
-                className="rounded-4xl px-6 py-3 bg-(--secondary)"
+                className="rounded-full px-4 py-2 bg-(--secondary)"
               >
                 {category}
               </li>
             ))}
           </ul>
         </div>
+
+        {/* --- MODIFIED: Driver Regions Section --- */}
         <div className="w-full sm:w-1/2 rounded-md border-2 border-(--border-color)">
           <header className="text-lg sm:text-xl py-5 px-5 pb-5 font-bold mb-4 border-b-2 border-(--border-color)">
-            Driver Regions Details
+            Delivery Regions
           </header>
-          <div>
-            <table className="w-full text-sm text-left text-(--secondaryFont) overflow-hidden">
-              <thead className="bg-gray-100 text-(--primaryFont)">
-                <tr>
-                  <th className="px-4 py-2">Region</th>
-                  <th className="px-4 py-2">Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                {restaurantDeliveryRegions?.map((region) => (
-                  <tr
-                    key={region.name}
-                    className="even:bg-gray-50 hover:bg-gray-100"
-                  >
-                    <td className="px-4 py-2">{region.name}</td>
-                    <td className="px-4 py-2">{region.price}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {uniqueFormattedRegions.length > 0 ? (
+            <ul className="flex flex-wrap justify-center gap-3 px-5 py-5">
+              {/* Map over the NEW, clean array of unique regions */}
+              {uniqueFormattedRegions.map((regionName) => (
+                <li
+                  key={regionName} // The regionName is now unique and safe to use as a key
+                  className="rounded-full px-4 py-2 bg-(--secondary) text-(--primaryFont) font-medium"
+                >
+                  {regionName}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-center text-(--secondaryFont) py-5">
+              No delivery regions specified.
+            </p>
+          )}
         </div>
       </div>
 
@@ -166,14 +177,13 @@ const Profile = () => {
             {restaurantOccasions?.map((occasion) => (
               <li
                 key={occasion.id}
-                className="rounded-4xl px-6 py-3 bg-(--secondary)"
+                className="rounded-full px-4 py-2 bg-(--secondary)"
               >
                 {occasion.name}
               </li>
             ))}
           </ul>
         </div>
-        {/* --- MODIFIED SERVICES SECTION --- */}
         <div className="w-full sm:w-1/2 rounded-md border-2 border-(--border-color)">
           <header className="text-lg sm:text-xl py-5 px-5 pb-5 font-bold mb-4 border-b-2 border-(--border-color)">
             Services
@@ -182,7 +192,7 @@ const Profile = () => {
             {restaurantServices?.map((service) => (
               <li
                 key={service.name}
-                className="rounded-4xl px-6 py-3 bg-(--secondary)"
+                className="rounded-full px-4 py-2 bg-(--secondary)"
               >
                 {service.name}
               </li>
