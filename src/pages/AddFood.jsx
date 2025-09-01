@@ -134,7 +134,7 @@ const AddPackage = () => {
     console.log(data);
     try {
       // The `data` object now includes `items` and `extras` automatically
-      await addPackage(data).unwrap();
+      const response = await addPackage(data).unwrap();
 
       toast.success(response.message || "Package created successfully!", {
         style: {
