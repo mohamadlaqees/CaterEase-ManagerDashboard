@@ -65,10 +65,7 @@ const Category = () => {
   const deleteHandler = async () => {
     try {
       const response = await deletePacakge(thePackageID);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Response(errorData.message || "Failed to delete package.");
-      }
+
       dispatch(openConfirmPopUp(false));
       console.log(response);
       toast.success(response.data.message, {

@@ -134,11 +134,8 @@ const AddPackage = () => {
     console.log(data);
     try {
       // The `data` object now includes `items` and `extras` automatically
-      const response = await addPackage(data).unwrap();
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Response(errorData.message || "Failed to add food.");
-      }
+      await addPackage(data).unwrap();
+
       toast.success(response.message || "Package created successfully!", {
         style: {
           background: "white",
